@@ -60,7 +60,7 @@ EINSUM_OPTIMIZE = "greedy"
 METHOD = labels.GFN1_XTB
 """General method for calculation from the xtb family."""
 
-METHOD_CHOICES = ["gfn1", "gfn1-xtb", "gfn2", "gfn2-xtb"]
+METHOD_CHOICES = ["gfn0", "gfn0-xtb", "gfn1", "gfn1-xtb", "gfn2", "gfn2-xtb"]
 """List of possible choices for `METHOD`."""
 
 SPIN = None
