@@ -56,7 +56,8 @@ def new_repulsion(
     par : Param | ParamModule
         Representation of an extended tight-binding model.
     cutoff : float
-        Real space cutoff for repulsion interactions (default: 25.0).
+        Real-space cutoff for repulsion interactions. If ``None``, use 40.0
+        for GFN0-xTB and :data:`xtb.DEFAULT_REPULSION_CUTOFF` otherwise.
     with_analytical_gradient : bool, optional
         Whether to instantiate a repulsion class that implements a custom
         backward function with an analytical nuclear gradient, i.e., the first
@@ -101,7 +102,12 @@ def new_repulsion(
     zeff = par.get_elem_param(unique, "zeff", pad_val=0)
 
     if cutoff is None:
-        cutoff = xtb.DEFAULT_REPULSION_CUTOFF
+        is_gfn0 = (
+            par.meta is not None
+            and par.meta.name is not None
+            and "gfn0" in par.meta.name.casefold()
+        )
+        cutoff = 40.0 if is_gfn0 else xtb.DEFAULT_REPULSION_CUTOFF
     cutoff = any_to_tensor(cutoff, **dd)
 
     if with_analytical_gradient is True:

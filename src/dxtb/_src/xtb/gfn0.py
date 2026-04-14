@@ -32,7 +32,7 @@ from dxtb import IndexHelper
 from dxtb._src.components.interactions import Potential
 from dxtb._src.param.base import Param
 from dxtb._src.param.module import ParameterModule, ParamModule
-from dxtb._src.typing import Any, Tensor
+from dxtb._src.typing import Any, Tensor, override
 
 from .base import PAD, BaseHamiltonian
 
@@ -55,14 +55,41 @@ class GFN0Hamiltonian(BaseHamiltonian):
     ) -> None:
         super().__init__(numbers, par, ihelp, device, dtype)
 
-    def _get_hscale(self, par):
-        pass
+    def _get_hscale(self, par: ParameterModule) -> Tensor:
+        """
+        Obtain the off-site scaling factor for the Hamiltonian.
+
+        Parameters
+        ----------
+        par : ParamModule
+            Representation of an extended tight-binding model.
+
+        Returns
+        -------
+        Tensor
+            Off-site scaling factor for the Hamiltonian.
+        """
+        if par.is_none("hamiltonian"):
+            raise RuntimeError("No Hamiltonian specified.")
+
+        ushells = self.ihelp.unique_angular
+
+        angular2label = {
+            0: "s",
+            1: "p",
+            2: "d",
+            3: "f",
+            4: "g",
+        }
+        angular_labels = [angular2label.get(int(ang), PAD) for ang in ushells]
+
+        return ksh
 
     @override
     def _get_elem_valence(self, par: ParamModule) -> Tensor:
         """
         Obtain a mask for valence and non-valence shells. This is only required
-        for GFN1-xTB's second hydrogen s-function.
+        for GFN0-xTB's second hydrogen s-function.
 
         Parameters
         ----------
