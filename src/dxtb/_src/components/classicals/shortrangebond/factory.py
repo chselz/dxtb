@@ -15,21 +15,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Components: Classical contributions
-===================================
+Short-ranged Bond Correction: Factory
+================================
 
-This module contains the classical energy contribution of xTB.
-The classical contribution currently comprise:
-
-- short-ranged bond correction (GFN0-xTB)
-- repulsion (GFN0-xTB, GFN1-xTB, GFN2-xTB)
-- halogen bonding correction (GFN1-xTB).
-- dispersion correction (GFN0-xTB, GFN1-xTB, GFN2-xTB).
+A factory function to create instances of the :class:`dxtb.components.Shortranged`
+class.
 """
 
-from .base import Classical, ClassicalCache
-from .dispersion import *
-from .halogen import *
-from .list import *
-from .repulsion import *
-from .shortrangebond import *
+from __future__ import annotations
+
+import torch
+from tad_mctc.convert import any_to_tensor
+
+from dxtb._src.constants import xtb
+from dxtb._src.param import Param, ParamModule
+from dxtb._src.typing import DD, Tensor, get_default_dtype
+
+from .srb import Shortranged
+
+__all__ = ["new_shortranged"]

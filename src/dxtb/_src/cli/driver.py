@@ -191,6 +191,9 @@ class Driver:
         elif config.method == labels.GFN2_XTB:
             # pylint: disable=import-outside-toplevel
             from dxtb import GFN2_XTB as par
+        elif config.method == labels.GFN0_XTB:
+            # pylint: disable=import-outside-toplevel
+            from dxtb import GFN0_XTB as par
         else:
             raise ValueError(f"Unknown method '{args.method}'.")
 
