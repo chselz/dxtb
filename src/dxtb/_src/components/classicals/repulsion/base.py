@@ -149,7 +149,23 @@ class BaseRepulsion(Classical):
     :default: :data:`xtb.DEFAULT_REPULSION_CUTOFF`
     """
 
-    __slots__ = ["arep", "zeff", "kexp", "klight", "cutoff"]
+    electronegativity: Tensor | None
+    """
+    Electronegativity values for unique species used to scale GFN0 repulsion.
+    """
+
+    enscale: Tensor | None
+    """Scaling factor for the GFN0 electronegativity correction."""
+
+    __slots__ = [
+        "arep",
+        "zeff",
+        "kexp",
+        "klight",
+        "cutoff",
+        "electronegativity",
+        "enscale",
+    ]
 
     def __init__(
         self,
@@ -158,6 +174,8 @@ class BaseRepulsion(Classical):
         kexp: Tensor,
         klight: Tensor | None = None,
         cutoff: Tensor | float | int = xtb.DEFAULT_REPULSION_CUTOFF,
+        electronegativity: Tensor | None = None,
+        enscale: Tensor | float | int | None = None,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
     ) -> None:
@@ -168,6 +186,14 @@ class BaseRepulsion(Classical):
         self.kexp = kexp.to(**self.dd)
         self.cutoff = any_to_tensor(cutoff, **self.dd)
         self.klight = None if klight is None else klight.to(**self.dd)
+        self.electronegativity = (
+            None
+            if electronegativity is None
+            else electronegativity.to(**self.dd)
+        )
+        self.enscale = (
+            None if enscale is None else any_to_tensor(enscale, **self.dd)
+        )
 
     @override
     def get_cache(
@@ -225,11 +251,20 @@ class BaseRepulsion(Classical):
         # gives nan's in gradgradcheck, because the epsilon is smaller than the
         # step size. But the actual gradient should be correct.
         eps = torch.finfo(arep.dtype).tiny
+        zero = torch.tensor(0.0, **self.dd)
         a = torch.where(
             mask,
             torch.sqrt(arep.unsqueeze(-1) * arep.unsqueeze(-2) + eps),
-            torch.tensor(0.0, **self.dd),
+            zero,
         )
+
+        # GFN0 uses an additional electronegativity-dependent scaling of alpha.
+        if self.electronegativity is not None and self.enscale is not None:
+            en = ihelp.spread_uspecies_to_atom(self.electronegativity)
+            den2 = (en.unsqueeze(-1) - en.unsqueeze(-2)).pow(2)
+            den4 = den2.pow(2)
+            scale = 1.0 + (0.01 * den2 + 0.01 * den4) * self.enscale
+            a = torch.where(mask, a * scale, zero)
 
         z = zeff.unsqueeze(-1) * zeff.unsqueeze(-2) * mask
         k = kexp.unsqueeze(-1) * kexp.new_ones(kexp.shape).unsqueeze(-2) * mask

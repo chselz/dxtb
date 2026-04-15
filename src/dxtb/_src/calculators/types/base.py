@@ -39,13 +39,12 @@ from dxtb._src.calculators.properties.vibration import (
     RamanResult,
     VibResult,
 )
-from dxtb._src.components.classicals import (
+from dxtb._src.components.classicals import (  # new_shortranged,
     Classical,
     ClassicalList,
     new_dispersion,
     new_halogen,
     new_repulsion,
-    new_shortranged,
 )
 from dxtb._src.components.interactions import Interaction, InteractionList
 from dxtb._src.components.interactions.container import Charges, Potential
@@ -650,23 +649,23 @@ class BaseCalculator(GetPropertiesMixin, TensorLike):
             if not {"all", "rep"} & set(self.opts.exclude)
             else None
         )
-        shortrange = (
-            new_shortranged(numbers, par, **dd)
-            if not {"all", "srb"} & set(self.opts.exclude)
-            else None
-        )
+        # shortrange = (
+        #     new_shortranged(numbers, par, **dd)
+        #     if not {"all", "srb"} & set(self.opts.exclude)
+        #     else None
+        # )
 
         if classical is None:
             self.classicals = ClassicalList(
-                halogen, dispersion, repulsion, shortrange, **dd
+                halogen, dispersion, repulsion, **dd
             )
         elif isinstance(classical, Classical):
             self.classicals = ClassicalList(
-                halogen, dispersion, repulsion, shortrange, classical, **dd
+                halogen, dispersion, repulsion, classical, **dd
             )
         elif isinstance(classical, (list, tuple)):
             self.classicals = ClassicalList(
-                halogen, dispersion, repulsion, shortrange, *classical, **dd
+                halogen, dispersion, repulsion, *classical, **dd
             )
         else:
             raise TypeError(

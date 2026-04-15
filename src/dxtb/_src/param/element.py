@@ -24,7 +24,7 @@ species.
 
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -88,6 +88,9 @@ class Element(BaseModel):
 
     en: float
     """Electronegativity."""
+
+    repen: Optional[float] = None
+    """Electronegativity used in GFN0 repulsion scaling."""
 
     ############################################################################
 

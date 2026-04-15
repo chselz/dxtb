@@ -35,3 +35,6 @@ DEFAULT_XB_CUTOFF: float = 20.0
 
 DEFAULT_REPULSION_CUTOFF: float = 25.0
 """Default real space cutoff for repulsion interactions."""
+
+GFN0_REPULSION_ENSCALE: float = -0.09
+"""GFN0 electronegativity scaling factor for repulsion alpha."""

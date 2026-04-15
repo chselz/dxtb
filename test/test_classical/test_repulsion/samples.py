@@ -29,6 +29,9 @@ from dxtb._src.typing import Molecule, Tensor, TypedDict
 class Refs(TypedDict):
     """Format of reference records containing GFN1-xTB and GFN2-xTB reference values."""
 
+    gfn0: Tensor
+    """Referenece values for GFN0-xTB"""
+
     gfn1: Tensor
     """Reference values for GFN1-xTB"""
 
@@ -48,12 +51,14 @@ class Record(Molecule, Refs):
 
 refs: dict[str, Refs] = {
     "H2": {
+        "gfn0": torch.tensor(2.8841531341e-02),
         "gfn1": torch.tensor(2.2362490584964e-02),
         "gfn2": torch.tensor(3.8770781236977e-02),
         "gfn1_grad": torch.tensor([]),
         "gfn1_hess": torch.tensor(0.0),
     },
     "LiH": {
+        "gfn0": torch.tensor(0.0),
         "gfn1": torch.tensor(0.0),
         "gfn2": torch.tensor(0.0),
         "gfn1_grad": torch.tensor(
@@ -114,6 +119,7 @@ refs: dict[str, Refs] = {
         ),
     },
     "H2O": {
+        "gfn0": torch.tensor(3.5575791708e-02),
         "gfn1": torch.tensor(3.6764721202060e-02),
         "gfn2": torch.tensor(3.3793519342311e-02),
         "gfn1_grad": torch.tensor(
@@ -138,6 +144,7 @@ refs: dict[str, Refs] = {
         "gfn1_hess": torch.tensor(0.0),
     },
     "SiH4": {
+        "gfn0": torch.tensor(3.6162301920e-002),
         "gfn1": torch.tensor(3.0331305861808766e-002),
         "gfn2": torch.tensor(3.1536555053538279e-002),
         "gfn1_grad": torch.tensor(
@@ -401,18 +408,21 @@ refs: dict[str, Refs] = {
         ),
     },
     "ZnOOH-": {
+        "gfn0": torch.tensor(2.5303804436e-02),
         "gfn1": torch.tensor(2.9095479886131e-02),
         "gfn1_grad": torch.tensor(0.0),
         "gfn1_hess": torch.tensor(0.0),
         "gfn2": torch.tensor(2.2289239363144e-02),
     },
     "LYS_xao": {
+        "gfn0": torch.tensor(0.576585078709),
         "gfn1": torch.tensor(0.54175667737478617),
         "gfn1_hess": torch.tensor(0.0),
         "gfn1_grad": torch.tensor(0.0),
         "gfn2": torch.tensor(5.5376567296060e-01),
     },
     "MB16_43_01": {
+        "gfn0": torch.tensor(0.171352833714),
         "gfn1": torch.tensor(0.16777923624986593),
         "gfn1_grad": torch.tensor(
             [
@@ -2810,6 +2820,7 @@ refs: dict[str, Refs] = {
         "gfn2": torch.tensor(0.15297938789402879),
     },
     "MB16_43_02": {
+        "gfn0": torch.tensor(0.125227645735),
         "gfn1": torch.tensor(0.12702003611285190),
         "gfn1_grad": torch.tensor(0.0),
         "gfn1_hess": torch.tensor(0.0),

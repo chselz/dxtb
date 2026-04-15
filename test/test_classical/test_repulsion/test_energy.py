@@ -30,6 +30,7 @@ from tad_mctc.batch import pack
 
 from dxtb import IndexHelper
 from dxtb._src.components.classicals import new_repulsion
+from dxtb._src.param.gfn0 import GFN0_XTB
 from dxtb._src.param.gfn1 import GFN1_XTB
 from dxtb._src.param.gfn2 import GFN2_XTB
 from dxtb._src.typing import DD, Literal
@@ -50,9 +51,9 @@ sample_list = [
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name", sample_list)
-@pytest.mark.parametrize("par", ["gfn1", "gfn2"])
+@pytest.mark.parametrize("par", ["gfn0", "gfn1", "gfn2"])
 def test_single(
-    dtype: torch.dtype, name: str, par: Literal["gfn1", "gfn2"]
+    dtype: torch.dtype, name: str, par: Literal["gfn0", "gfn1", "gfn2"]
 ) -> None:
     """Test repulsion calculation for single sample."""
     dd: DD = {"device": DEVICE, "dtype": dtype}
@@ -68,6 +69,8 @@ def test_single(
         _par = GFN1_XTB
     elif par == "gfn2":
         _par = GFN2_XTB
+    elif par == "gfn0":
+        _par = GFN0_XTB
     else:
         assert False
 

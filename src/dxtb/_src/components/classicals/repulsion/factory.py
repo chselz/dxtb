@@ -83,6 +83,12 @@ def new_repulsion(
     if not isinstance(par, ParamModule):
         par = ParamModule(par, **dd)
 
+    is_gfn0 = (
+        par.meta is not None
+        and par.meta.name is not None
+        and "gfn0" in par.meta.name.casefold()
+    )
+
     if "repulsion" not in par or par.is_none("repulsion"):
         # Although repulsion is used in all models, we do not want to exit
         # for custom models that are loaded from a parameter file. Hence, we
@@ -101,15 +107,41 @@ def new_repulsion(
     arep = par.get_elem_param(unique, "arep", pad_val=0)
     zeff = par.get_elem_param(unique, "zeff", pad_val=0)
 
+    repulsion_en = None
+    enscale = None
+    if is_gfn0 is True:
+        enscale = any_to_tensor(xtb.GFN0_REPULSION_ENSCALE, **dd)
+        try:
+            repulsion_en = par.get_elem_param(unique, "repen", pad_val=0)
+        except KeyError as exc:
+            raise ValueError(
+                "GFN0 repulsion electronegativity values are missing in "
+                "element records ('repen')."
+            ) from exc
+
     if cutoff is None:
-        is_gfn0 = (
-            par.meta is not None
-            and par.meta.name is not None
-            and "gfn0" in par.meta.name.casefold()
-        )
         cutoff = 40.0 if is_gfn0 else xtb.DEFAULT_REPULSION_CUTOFF
     cutoff = any_to_tensor(cutoff, **dd)
 
     if with_analytical_gradient is True:
-        return RepulsionAnalytical(arep, zeff, kexp, klight, cutoff, **dd)
-    return Repulsion(arep, zeff, kexp, klight, cutoff, **dd)
+        return RepulsionAnalytical(
+            arep,
+            zeff,
+            kexp,
+            klight,
+            cutoff,
+            electronegativity=repulsion_en,
+            enscale=enscale,
+            **dd,
+        )
+
+    return Repulsion(
+        arep,
+        zeff,
+        kexp,
+        klight,
+        cutoff,
+        electronegativity=repulsion_en,
+        enscale=enscale,
+        **dd,
+    )
