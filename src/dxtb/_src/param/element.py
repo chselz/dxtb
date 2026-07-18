@@ -92,6 +92,15 @@ class Element(BaseModel):
     repen: Optional[float] = None
     """Electronegativity used in GFN0 repulsion scaling."""
 
+    srben: Optional[float] = None
+    """Element-specific EN value used in GFN0 SRB distance scaling."""
+
+    srbr0: Optional[float] = None
+    """Element-specific reference radius used in GFN0 SRB."""
+
+    srbcn: Optional[float] = None
+    """Element-specific CN scaling coefficient used in GFN0 SRB."""
+
     ############################################################################
 
     dkernel: float = 0.0

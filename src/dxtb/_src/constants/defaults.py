@@ -73,6 +73,7 @@ EXCLUDE: list[str] = []
 """List of xTB components to exclude during the calculation."""
 
 EXCLUDE_CHOICES = [
+    "srb",
     "disp",
     "d4sc",
     "rep",

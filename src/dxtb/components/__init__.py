@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from dxtb.components import field as field
     from dxtb.components import halogen as halogen
     from dxtb.components import repulsion as repulsion
+    from dxtb.components import shortrangebond as shortrangebond
     from dxtb.components import solvation as solvation
 else:
     import dxtb._src.loader.lazy as _lazy
@@ -68,6 +69,7 @@ else:
             "dispersion",
             "halogen",
             "repulsion",
+            "shortrangebond",
         ],
     )
     del _lazy

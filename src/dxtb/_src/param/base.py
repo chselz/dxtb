@@ -48,6 +48,7 @@ from .hamiltonian import Hamiltonian
 from .meta import Meta
 from .multipole import Multipole
 from .repulsion import Repulsion
+from .shortrangebond import ShortRangeBond
 from .solvation import Solvation
 from .thirdorder import ThirdOrder
 
@@ -78,6 +79,9 @@ class Param(BaseModel):
 
     repulsion: Optional[Repulsion] = None
     """Definition of the repulsion contribution."""
+
+    shortrangebond: Optional[ShortRangeBond] = None
+    """Definition of the GFN0 short-ranged bond correction."""
 
     charge: Optional[Charge] = None
     """Definition of the isotropic second-order charge interactions."""
