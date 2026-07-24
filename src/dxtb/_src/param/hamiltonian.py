@@ -27,9 +27,9 @@ additional distance dependent function formed from the element parametrization.
 
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 __all__ = ["PHamiltonian", "PHamiltonianXTB"]
 
@@ -63,14 +63,25 @@ class PHamiltonianXTB(BaseModel):
     self-energy and the distance polynomial.
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     wexp: float
     """Exponent of the orbital exponent dependent off-site scaling factor"""
 
     kpol: float = 2.0
     """Scaling factor for polarization functions"""
 
-    enscale: float
+    enscale: Optional[float] = None
     """Electronegativity scaling factor for off-site valence blocks"""
+
+    kdiff: Optional[float] = None
+    """Scaling factor for a valence/non-valence shell pair."""
+
+    enshell: Optional[List[float]] = None
+    """Angular-momentum-dependent electronegativity coefficients."""
+
+    enscale4: Optional[float] = None
+    """Quartic electronegativity scaling factor."""
 
     cn: Optional[str] = None
     """Local environment descriptor for shifting the atomic self-energies"""

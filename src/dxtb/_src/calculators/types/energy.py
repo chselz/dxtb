@@ -157,7 +157,7 @@ class EnergyCalculator(BaseCalculator):
 
             ccaches = self.classicals.get_cache(self.numbers, self.ihelp)
             cenergies = self.classicals.get_energy(
-                positions, ccaches, charge=chrg
+                positions, ccaches, charge=_chrg
             )
             result.cenergies = cenergies
             result.total += torch.stack(list(cenergies.values())).sum(0)

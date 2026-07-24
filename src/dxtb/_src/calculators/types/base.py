@@ -44,6 +44,7 @@ from dxtb._src.components.classicals import (
     ClassicalList,
     new_dispersion,
     new_halogen,
+    new_ies,
     new_repulsion,
 )
 from dxtb._src.components.interactions import Interaction, InteractionList
@@ -641,6 +642,11 @@ class BaseCalculator(GetPropertiesMixin, TensorLike):
             if not {"all", "hal"} & set(self.opts.exclude)
             else None
         )
+        ies = (
+            new_ies(numbers, par, **dd)
+            if not {"all", "ies"} & set(self.opts.exclude)
+            else None
+        )
         dispersion = (
             new_dispersion(numbers, par, **dd)
             if not {"all", "disp"} & set(self.opts.exclude)
@@ -654,15 +660,15 @@ class BaseCalculator(GetPropertiesMixin, TensorLike):
 
         if classical is None:
             self.classicals = ClassicalList(
-                halogen, dispersion, repulsion, **dd
+                halogen, ies, dispersion, repulsion, **dd
             )
         elif isinstance(classical, Classical):
             self.classicals = ClassicalList(
-                halogen, dispersion, repulsion, classical, **dd
+                halogen, ies, dispersion, repulsion, classical, **dd
             )
         elif isinstance(classical, (list, tuple)):
             self.classicals = ClassicalList(
-                halogen, dispersion, repulsion, *classical, **dd
+                halogen, ies, dispersion, repulsion, *classical, **dd
             )
         else:
             raise TypeError(

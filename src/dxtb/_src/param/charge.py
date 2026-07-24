@@ -23,7 +23,9 @@ Definition of the isotropic second-order charge interactions.
 
 from __future__ import annotations
 
-from pydantic import BaseModel
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
 
 from dxtb._src.constants.xtb import DEFAULT_ES2_GEXP
 
@@ -35,6 +37,8 @@ class PSecondOrderEffective(BaseModel):
     Representation of the isotropic second-order charge interactions for a
     parametrization.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     gexp: float = DEFAULT_ES2_GEXP
     """Exponent of Coulomb kernel. """
@@ -51,3 +55,6 @@ class PSecondOrder(BaseModel):
 
     effective: PSecondOrderEffective
     """Klopman-Ohno electrostatics."""
+
+    eeq: Optional[ChargeEEQ] = None
+    """Electronegativity-equilibration model."""

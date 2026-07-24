@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 __all__ = ["PRepulsionEffective", "PRepulsion"]
 
@@ -35,6 +35,8 @@ class PRepulsionEffective(BaseModel):
     """
     Representation of the repulsion contribution for a parametrization.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     kexp: float
     """
@@ -47,6 +49,12 @@ class PRepulsionEffective(BaseModel):
     Scaling of the interatomic distance in the exponential damping function of
     the repulsion energy for light elements, i.e., H and He (only GFN2).
     """
+
+    enscale: Optional[float] = None
+    """Electronegativity-difference scaling of the pair exponent."""
+
+    cutoff: Optional[float] = None
+    """Real-space cutoff in Bohr."""
 
 
 class PRepulsion(BaseModel):

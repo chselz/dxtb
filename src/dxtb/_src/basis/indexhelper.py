@@ -326,6 +326,17 @@ class IndexHelper(TensorLike):
         if not isinstance(par, ParamModule):
             par = ParamModule(par)
 
+        if not par.is_none("meta.name"):
+            name = par.get("meta.name")
+            if (
+                isinstance(name, str)
+                and name.casefold() in {"gfn0-xtb", "gfn0xtb", "gfn0"}
+                and torch.any(numbers > 86)
+            ):
+                raise ValueError(
+                    "GFN0-xTB supports elements only through Rn (Z=86)."
+                )
+
         return cls.from_numbers_angular(
             numbers,
             angular=par.get_elem_angular(),

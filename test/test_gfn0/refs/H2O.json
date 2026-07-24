@@ -1,0 +1,108 @@
+{
+  "atomic_charges": [
+    -0.69982957,
+    0.34991478,
+    0.34991478
+  ],
+  "energies": {
+    "d4_2body": -7.386882e-05,
+    "eht": -4.36170582021,
+    "fermi": 0.0,
+    "ies": -0.040610154595,
+    "repulsion": 0.035575791708,
+    "srb": 0.0,
+    "total": -4.366814051917
+  },
+  "metadata": {
+    "angstrom_per_bohr": 0.52917726,
+    "charge_unit": "elementary_charge",
+    "command": "xtb coord --gfn 0",
+    "coordinate_unit": "bohr",
+    "energy_unit": "hartree",
+    "ev_per_hartree": 27.21138505,
+    "legacy_conversion_constants_used": true,
+    "oracle": "xtb",
+    "oracle_revision": "edcfbbe",
+    "oracle_version": "6.7.1",
+    "orbital_energy_unit": "hartree",
+    "spin": 0,
+    "tolerances": {
+      "charge_atol": 5e-08,
+      "component_atol": 1e-08,
+      "orbital_energy_atol": 5e-08,
+      "total_atol": 1e-09
+    },
+    "total_charge": 0
+  },
+  "numbers": [
+    8,
+    1,
+    1
+  ],
+  "orbitals": [
+    {
+      "energy": -0.7053408,
+      "index": 1,
+      "occupation": 2.0
+    },
+    {
+      "energy": -0.5613593,
+      "index": 2,
+      "occupation": 2.0
+    },
+    {
+      "energy": -0.4844494,
+      "index": 3,
+      "occupation": 2.0
+    },
+    {
+      "energy": -0.4297034,
+      "index": 4,
+      "occupation": 2.0
+    },
+    {
+      "energy": -0.2048048,
+      "index": 5,
+      "occupation": 0.0
+    },
+    {
+      "energy": -0.0938162,
+      "index": 6,
+      "occupation": 0.0
+    },
+    {
+      "energy": 0.2242865,
+      "index": 7,
+      "occupation": 0.0
+    },
+    {
+      "energy": 0.3005526,
+      "index": 8,
+      "occupation": 0.0
+    }
+  ],
+  "positions": [
+    [
+      0.0,
+      0.0,
+      -0.74288549752983
+    ],
+    [
+      -1.43472674945442,
+      0.0,
+      0.37144274876492
+    ],
+    [
+      1.43472674945442,
+      0.0,
+      0.37144274876492
+    ]
+  ],
+  "schema_version": 1,
+  "symbols": [
+    "O",
+    "H",
+    "H"
+  ],
+  "system": "H2O"
+}

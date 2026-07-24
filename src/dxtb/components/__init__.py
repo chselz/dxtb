@@ -52,6 +52,7 @@ if TYPE_CHECKING:
     from dxtb.components import dispersion as dispersion
     from dxtb.components import field as field
     from dxtb.components import halogen as halogen
+    from dxtb.components import ies as ies
     from dxtb.components import repulsion as repulsion
     from dxtb.components import solvation as solvation
 else:
@@ -67,6 +68,7 @@ else:
             #
             "dispersion",
             "halogen",
+            "ies",
             "repulsion",
         ],
     )

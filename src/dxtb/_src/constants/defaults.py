@@ -77,6 +77,7 @@ EXCLUDE_CHOICES = [
     "d4sc",
     "rep",
     "hal",
+    "ies",
     "aes2",
     "es2",
     "es3",
