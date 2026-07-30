@@ -38,14 +38,23 @@ def new_spinpolarisation(
     numbers: Tensor,
     device: torch.device | None = None,
     dtype: torch.dtype | None = None,
+    wscale: Tensor | float = 1.0,
 ) -> SpinPolarisation:
+    """Create the spin-polarization interaction.
+
+    ``wscale`` applies tblite's global scaling factor to all shell-pair spin
+    constants. It may be a Python scalar or a scalar tensor, allowing the
+    scale to participate in PyTorch autograd.
+    (compare to tblite/src/tblite/api/container.f90)
+    """
 
     dd: DD = {
         "device": device,
         "dtype": dtype if dtype is not None else get_default_dtype(),
     }
 
-    spinconst = _load_spin_constants(**dd)[numbers]
+    scale = torch.as_tensor(wscale, **dd)
+    spinconst = _load_spin_constants(**dd)[numbers] * scale
 
     return SpinPolarisation(
         spinconst,

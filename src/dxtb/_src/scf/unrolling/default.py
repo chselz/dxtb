@@ -94,8 +94,12 @@ class SelfConsistentFieldFull(BaseTSCF):
         else:
             q = q_new
 
-        # single-system (non-batched) case, which does not require culling
-        if batched == 0:
+        # UHF tensors carry an additional spin axis (or flatten that axis into
+        # the monopole vector). The batch-culling implementation below assumes
+        # RHF layouts when repacking converged systems, so keep UHF batches
+        # intact until every system has converged. Culling is an optimization;
+        # omitting it does not alter the SCF fixed point or gradient graph.
+        if batched == 0 or self._nspin > 1:
             for _ in range(maxiter):
                 q_new = fcn(q)
 
@@ -107,14 +111,14 @@ class SelfConsistentFieldFull(BaseTSCF):
 
                 q = self.mixer.iter(q_new, q)
 
-                if self.mixer.converged:
+                if self.mixer.converged.all():
                     # Do not return mixed charges here, but from last SCF call!
                     q_converged = q_new
                     break
 
                 if self.config.damp_dynamic is True:
                     # Switch off damping if the norm of the difference is small
-                    if self.mixer.delta_norm < 0.1:
+                    if (self.mixer.delta_norm < 0.1).all():
                         self.mixer.options["damp"] = (
                             self.config.damp_dynamic_factor
                         )

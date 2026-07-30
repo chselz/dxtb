@@ -106,3 +106,22 @@ def test_wll_batch(dtype: torch.dtype, model_cls) -> None:
             assert (
                 torch.count_nonzero(cache.wll[batch_idx, :, nsh_single:]) == 0
             )
+
+
+def test_wscale_and_autograd() -> None:
+    dd: DD = {"device": DEVICE, "dtype": torch.double}
+    numbers = samples["LiH"]["numbers"].to(DEVICE)
+    ihelp = IndexHelper.from_numbers(numbers, GFN1_XTB)
+    scale = torch.tensor(2.0, **dd, requires_grad=True)
+
+    base = factory.new_spinpolarisation(numbers, **dd).get_cache(
+        numbers=numbers, ihelp=ihelp
+    )
+    scaled = factory.new_spinpolarisation(
+        numbers, wscale=scale, **dd
+    ).get_cache(numbers=numbers, ihelp=ihelp)
+
+    torch.testing.assert_close(scaled.wll, 2.0 * base.wll)
+    scaled.wll.sum().backward()
+    assert scale.grad is not None
+    torch.testing.assert_close(scale.grad, base.wll.sum())
