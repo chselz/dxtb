@@ -58,6 +58,7 @@ class AnalyticalCalculator(EnergyCalculator):
     ]
     """Names of implemented methods of the Calculator."""
 
+    @cdec.requires_analytical_gradients
     @cdec.requires_positions_grad
     @cdec.cache
     def forces_analytical(
@@ -112,6 +113,9 @@ class AnalyticalCalculator(EnergyCalculator):
             self.cache.reset_all()
 
         self.energy(positions, chrg, spin, **kwargs)
+        _chrg: Tensor = torch.atleast_1d(any_to_tensor(chrg, **self.dd))
+        if self.numbers.ndim > 1 and _chrg.ndim == 1 and _chrg.numel() != 1:
+            _chrg = _chrg.view(-1, 1)
 
         # CLASSICAL CONTRIBUTIONS
 
@@ -120,7 +124,9 @@ class AnalyticalCalculator(EnergyCalculator):
             timer.start("Classicals")
 
             ccaches = self.classicals.get_cache(self.numbers, self.ihelp)
-            cenergies = self.classicals.get_energy(positions, ccaches)
+            cenergies = self.classicals.get_energy(
+                positions, ccaches, charge=_chrg
+            )
 
             timer.stop("Classicals")
             OutputHandler.write_stdout("done", v=3)
@@ -264,7 +270,9 @@ class AnalyticalCalculator(EnergyCalculator):
         """
         OutputHandler.write_stdout("Singlepoint ", v=3)
 
-        chrg = any_to_tensor(chrg, **self.dd)
+        _chrg: Tensor = torch.atleast_1d(any_to_tensor(chrg, **self.dd))
+        if self.numbers.ndim > 1 and _chrg.ndim == 1 and _chrg.numel() != 1:
+            _chrg = _chrg.view(-1, 1)
         if spin is not None:
             spin = any_to_tensor(spin, **self.dd)
 
@@ -278,7 +286,9 @@ class AnalyticalCalculator(EnergyCalculator):
             timer.start("Classicals")
 
             ccaches = self.classicals.get_cache(self.numbers, self.ihelp)
-            cenergies = self.classicals.get_energy(positions, ccaches)
+            cenergies = self.classicals.get_energy(
+                positions, ccaches, charge=_chrg
+            )
             result.cenergies = cenergies
             result.total += torch.stack(list(cenergies.values())).sum(0)
 
@@ -356,7 +366,7 @@ class AnalyticalCalculator(EnergyCalculator):
         if self.opts.ints.level >= labels.INTLEVEL_HCORE:
             OutputHandler.write_stdout_nf(" - Core Hamiltonian  ... ", v=3)
             timer.start("Core Hamiltonian", parent_uid="Integrals")
-            intmats.hcore = self.integrals.build_hcore(positions)
+            intmats.hcore = self.integrals.build_hcore(positions, charge=_chrg)
             timer.stop("Core Hamiltonian")
             OutputHandler.write_stdout("done", v=3)
 
@@ -397,13 +407,18 @@ class AnalyticalCalculator(EnergyCalculator):
         timer.stop("Interaction Cache")
         OutputHandler.write_stdout("done", v=3)
 
-        # SCF
-        OutputHandler.write_stdout("\nStarting SCF Iterations...", v=3)
+        # Electronic solve
+        if self.opts.scf.requires_iterations:
+            OutputHandler.write_stdout("\nStarting SCF Iterations...", v=3)
+        else:
+            OutputHandler.write_stdout(
+                "\nStarting non-self-consistent electronic solve...", v=3
+            )
 
         scf_results = scf.solve(
             self.numbers,
             positions,
-            chrg,
+            _chrg,
             spin,
             self.interactions,
             icaches,
@@ -414,9 +429,14 @@ class AnalyticalCalculator(EnergyCalculator):
         )
 
         timer.stop("SCF")
-        OutputHandler.write_stdout(
-            f"SCF finished in {scf_results['iterations']} iterations.", v=3
-        )
+        if self.opts.scf.requires_iterations:
+            OutputHandler.write_stdout(
+                f"SCF finished in {scf_results['iterations']} iterations.", v=3
+            )
+        else:
+            OutputHandler.write_stdout(
+                "Non-self-consistent electronic solve finished.", v=3
+            )
 
         # store SCF results
         result.charges = scf_results["charges"]
@@ -493,6 +513,7 @@ class AnalyticalCalculator(EnergyCalculator):
 
         return -total_grad
 
+    @cdec.requires_analytical_gradients
     @cdec.requires_efield
     @cdec.cache
     def dipole_analytical(

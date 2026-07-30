@@ -33,6 +33,7 @@ from tad_mctc.typing import CNFunc, PathLike, Tensor, TensorLike
 from tad_mctc.units import EV2AU
 
 from dxtb import IndexHelper
+from dxtb._src.components.interactions import Potential
 from dxtb._src.param import Param, ParamModule
 
 from .abc import HamiltonianABC
@@ -137,7 +138,11 @@ class BaseHamiltonian(HamiltonianABC, TensorLike):
         # atom-resolved parameters
         self.rad = ATOMIC_RADII(**self.dd)[self.unique]
         self.en = par.get_elem_param(self.unique, "en", pad_val=PAD)
-        self.enscale = par.get("hamiltonian.xtb.enscale")
+        self.enscale = (
+            torch.tensor(0.0, **self.dd)
+            if par.is_none("hamiltonian.xtb.enscale")
+            else par.get("hamiltonian.xtb.enscale")
+        )
 
         # shell-resolved element parameters
         self.kcn = par.get_elem_param(self.unique, "kcn", pad_val=PAD)
@@ -248,7 +253,12 @@ class BaseHamiltonian(HamiltonianABC, TensorLike):
 
         torch.save(self.matrix, path)
 
-    def build(self, positions: Tensor, overlap: Tensor | None = None) -> Tensor:
+    def build(
+        self,
+        positions: Tensor,
+        overlap: Tensor | None = None,
+        charge: Tensor | float | int | None = None,
+    ) -> Tensor:
         """
         Build the xTB Hamiltonian.
 
@@ -259,6 +269,9 @@ class BaseHamiltonian(HamiltonianABC, TensorLike):
         overlap : Tensor | None, optional
             Overlap matrix. If ``None``, the true xTB Hamiltonian is *not*
             built. Defaults to ``None``.
+        charge : Tensor | float | int | None, optional
+            Total molecular charge. Consumed by GFN0 and ignored by the
+            existing GFN1/GFN2 Hamiltonians.
 
         Returns
         -------
@@ -358,3 +371,18 @@ class BaseHamiltonian(HamiltonianABC, TensorLike):
         h0 = symmetrize(hcore)
         self.matrix = h0
         return h0
+
+    def get_gradient(
+        self,
+        positions: Tensor,
+        overlap: Tensor,
+        doverlap: Tensor,
+        pmat: Tensor,
+        wmat: Tensor,
+        pot: Potential,
+        cn: Tensor,
+    ) -> tuple[Tensor, Tensor]:
+        """Reject unsupported analytical Hamiltonian gradients explicitly."""
+        raise NotImplementedError(
+            f"Analytical H0 gradient is not implemented for {self.label}."
+        )

@@ -37,7 +37,7 @@ import torch
 from dxtb import OutputHandler
 from dxtb._src.components.interactions import efield as efield
 from dxtb._src.components.interactions.field import efieldgrad as efieldgrad
-from dxtb._src.constants import defaults
+from dxtb._src.constants import defaults, labels
 from dxtb._src.typing import Any, Callable, Tensor, TypeVar
 from dxtb._src.utils.tensors import tensor_id
 
@@ -50,6 +50,7 @@ __all__ = [
     "requires_efield_grad",
     "requires_efg",
     "requires_efg_grad",
+    "requires_analytical_gradients",
     "numerical",
     "cache",
 ]
@@ -58,6 +59,22 @@ logger = logging.getLogger(__name__)
 
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+
+def requires_analytical_gradients(func: F) -> F:
+    """Reject methods without a complete analytical derivative model."""
+
+    @wraps(func)
+    def wrapper(self: Calculator, *args: Any, **kwargs: Any) -> Any:
+        if self.opts.method == labels.GFN0_XTB:
+            raise NotImplementedError(
+                f"'{func.__name__}' is not implemented for GFN0-xTB because "
+                "its complete analytical derivative model is unavailable. "
+                "Use an autograd or numerical derivative entry point instead."
+            )
+        return func(self, *args, **kwargs)
+
+    return cast(F, wrapper)
 
 
 def requires_positions_grad(

@@ -60,7 +60,13 @@ EINSUM_OPTIMIZE = "greedy"
 METHOD = labels.GFN1_XTB
 """General method for calculation from the xtb family."""
 
-METHOD_CHOICES = ["gfn1", "gfn1-xtb", "gfn2", "gfn2-xtb"]
+METHOD_CHOICES = [
+    *labels.GFN0_XTB_STRS,
+    "gfn1",
+    "gfn1-xtb",
+    "gfn2",
+    "gfn2-xtb",
+]
 """List of possible choices for `METHOD`."""
 
 SPIN = None
@@ -78,6 +84,7 @@ EXCLUDE_CHOICES = [
     "rep",
     "hal",
     "ies",
+    "srb",
     "aes2",
     "es2",
     "es3",

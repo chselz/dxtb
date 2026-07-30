@@ -28,6 +28,9 @@ from dxtb._src.components.classicals.dispersion import (
     DispersionD4 as DispersionD4,
 )
 from dxtb._src.components.classicals.dispersion import (
+    DispersionD4GFN0 as DispersionD4GFN0,
+)
+from dxtb._src.components.classicals.dispersion import (
     new_dispersion as new_dispersion,
 )
 from dxtb._src.components.interactions.dispersion import (
@@ -38,6 +41,7 @@ from dxtb._src.components.interactions.dispersion import new_d4sc as new_d4sc
 __all__ = [
     "DispersionD3",
     "DispersionD4",
+    "DispersionD4GFN0",
     "new_dispersion",
     "new_d4sc",
     "DispersionD4SC",

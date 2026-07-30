@@ -33,3 +33,4 @@ from .halogen import *
 from .ies import *
 from .list import *
 from .repulsion import *
+from .shortrangebond import *

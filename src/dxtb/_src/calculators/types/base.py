@@ -46,6 +46,7 @@ from dxtb._src.components.classicals import (
     new_halogen,
     new_ies,
     new_repulsion,
+    new_srb,
 )
 from dxtb._src.components.interactions import Interaction, InteractionList
 from dxtb._src.components.interactions.container import Charges, Potential
@@ -554,7 +555,10 @@ class BaseCalculator(GetPropertiesMixin, TensorLike):
         # maximum level required for the respective parametrization.
         if kwargs.pop("auto_int_level", True):
             if par.meta is not None and par.meta.name is not None:
-                if "gfn1" in par.meta.name.casefold():
+                if any(
+                    method in par.meta.name.casefold()
+                    for method in ("gfn0", "gfn1")
+                ):
                     self.opts.ints.level = max(
                         labels.INTLEVEL_HCORE, self.opts.ints.level
                     )
@@ -657,18 +661,23 @@ class BaseCalculator(GetPropertiesMixin, TensorLike):
             if not {"all", "rep"} & set(self.opts.exclude)
             else None
         )
+        srb = (
+            new_srb(unique, par, **dd)
+            if not {"all", "srb"} & set(self.opts.exclude)
+            else None
+        )
 
         if classical is None:
             self.classicals = ClassicalList(
-                halogen, ies, dispersion, repulsion, **dd
+                halogen, ies, dispersion, repulsion, srb, **dd
             )
         elif isinstance(classical, Classical):
             self.classicals = ClassicalList(
-                halogen, ies, dispersion, repulsion, classical, **dd
+                halogen, ies, dispersion, repulsion, srb, classical, **dd
             )
         elif isinstance(classical, (list, tuple)):
             self.classicals = ClassicalList(
-                halogen, ies, dispersion, repulsion, *classical, **dd
+                halogen, ies, dispersion, repulsion, srb, *classical, **dd
             )
         else:
             raise TypeError(

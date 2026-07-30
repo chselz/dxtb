@@ -15,3 +15,22 @@ CI and the dxtb runtime must never read the sibling `references` or `gfn0`
 directories. Each fixture records the original command, charge/spin, units,
 legacy conversion constants, and starting float64 tolerances. Large-system
 orbital tables contain only the non-elided entries printed by xTB.
+
+## End-to-end acceptance tolerances
+
+The public-calculator validation sums every atomwise component separately and
+compares it to the frozen xTB 6.7.1 value. On the reference CPU environment,
+float64 showed a worst total error of `2.65e-10` Eh and a worst classical
+component error of `4.20e-10` Eh. The float64 acceptance bounds are therefore
+`1e-8` Eh for classical components and `1e-9` Eh for totals and for the
+combined EHT + Fermi contribution.
+
+For `MB16_43_02`, xTB prints the Fermi term as zero while dxtb retains a
+`3.02e-7` Eh finite-temperature term and the compensating EHT partition. Each
+of those two printed partitions is accepted to `1e-6` Eh, while their sum is
+still required to meet `1e-9` Eh. This exception is isolated and cannot be
+satisfied through unrelated classical-component cancellation.
+
+The observed float32 worst errors were `4.38e-6` Eh for an individual
+component and `3.75e-6` Eh for the total, both on `LYS_xao`. The float32
+end-to-end acceptance bound is `1e-5` Eh for every component and the total.

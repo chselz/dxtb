@@ -19,5 +19,5 @@ Dispersion models in the extended tight-binding model.
 """
 
 from .d3 import DispersionD3
-from .d4 import DispersionD4
+from .d4 import DispersionD4, DispersionD4GFN0
 from .factory import new_dispersion
