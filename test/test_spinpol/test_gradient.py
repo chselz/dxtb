@@ -108,3 +108,32 @@ def test_forces_against_tblite(
 
     forces = calc.forces(positions, chrg=torch.tensor(0.0, **dd), spin=spin)
     assert pytest.approx((-ref).cpu(), abs=1e-5, rel=2e-4) == forces.cpu()
+
+
+@pytest.mark.grad
+@pytest.mark.filterwarnings("ignore")
+def test_pure_implicit_backward_against_tblite() -> None:
+    dd: DD = {"device": DEVICE, "dtype": torch.double}
+    sample = samples["LiH"]
+    numbers = sample["numbers"].to(DEVICE)
+    positions = sample["positions"].to(**dd).clone().requires_grad_(True)
+
+    calc = Calculator(
+        numbers,
+        par=GFN1_XTB,
+        interaction=[new_spinpolarisation(numbers=numbers, **dd)],
+        opts={
+            "verbosity": 0,
+            "scf_mode": "implicit",
+            "scp_mode": "potential",
+        },
+        **dd,
+    )
+    result = calc.singlepoint(positions, chrg=torch.tensor(0.0, **dd), spin=2)
+    result.total.sum(-1).backward()
+
+    assert positions.grad is not None
+    assert (
+        pytest.approx(sample["gspgfn1"].cpu(), abs=1e-5, rel=2e-4)
+        == positions.grad.cpu()
+    )

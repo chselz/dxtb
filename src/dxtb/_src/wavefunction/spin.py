@@ -28,6 +28,8 @@ and in up/down representation for orbital energies, occupation numbers, ...
 
 from __future__ import annotations
 
+import torch
+
 from dxtb._src.typing import Tensor
 
 __all__ = [
@@ -44,111 +46,102 @@ __all__ = [
 # === magnet_to_updown_* ===
 
 
+def _magnet_to_updown(x: Tensor, dim: int) -> Tensor:
+    charge = x.select(dim, 0)
+    magnetization = x.select(dim, 1)
+    return torch.stack(
+        (
+            0.5 * (charge + magnetization),
+            0.5 * (charge - magnetization),
+        ),
+        dim=dim,
+    )
+
+
+def _updown_to_magnet(x: Tensor, dim: int) -> Tensor:
+    up = x.select(dim, 0)
+    down = x.select(dim, 1)
+    return torch.stack((up + down, up - down), dim=dim)
+
+
 def magnet_to_updown_1(x: Tensor) -> Tensor:
-    """In-place conversion: charge/magnetization → up/down, 1D."""
+    """Convert charge/magnetization to up/down, 1D."""
     if x.shape[0] != 2:
         raise ValueError("Length must be 2.")
-    x[0] = 0.5 * (x[0] + x[1])
-    x[1] = x[0] - x[1]
-    return x
+    return _magnet_to_updown(x, 0)
 
 
 def magnet_to_updown_2(x: Tensor) -> Tensor:
-    """In-place conversion: charge/magnetization → up/down, 2D (..., 2, n_shells)."""
+    """Convert charge/magnetization to up/down, 2D (..., 2, n_shells)."""
     if x.shape[-2] != 2:
         raise ValueError("Second-to-last dimension must be 2.")
-    x[..., 0, :] = 0.5 * (x[..., 0, :] + x[..., 1, :])
-    x[..., 1, :] = x[..., 0, :] - x[..., 1, :]
-    return x
+    return _magnet_to_updown(x, -2)
 
 
 def magnet_to_updown_3(x: Tensor) -> Tensor:
-    """In-place conversion: charge/magnetization → up/down, 3D (..., :, :, 2)."""
+    """Convert charge/magnetization to up/down, 3D (..., :, :, 2)."""
     if x.shape[-1] != 2:
         raise ValueError("Last dimension must be 2.")
-    x[..., 0] = 0.5 * (x[..., 0] + x[..., 1])
-    x[..., 1] = x[..., 0] - x[..., 1]
-    return x
+    return _magnet_to_updown(x, -1)
 
 
 def magnet_to_updown_4(x: Tensor) -> Tensor:
-    """In-place conversion: charge/magnetization → up/down, 4D (..., :, :, :, 2)."""
+    """Convert charge/magnetization to up/down, 4D (..., :, :, :, 2)."""
     if x.shape[-1] != 2:
         raise ValueError("Last dimension must be 2.")
-    x[..., 0] = 0.5 * (x[..., 0] + x[..., 1])
-    x[..., 1] = x[..., 0] - x[..., 1]
-    return x
+    return _magnet_to_updown(x, -1)
 
 
 # === updown_to_magnet_* ===
 
 
 def updown_to_magnet_1(x: Tensor) -> Tensor:
-    """In-place conversion: up/down → charge/magnetization, 1D."""
+    """Convert up/down to charge/magnetization, 1D."""
     if x.shape[0] != 2:
         raise ValueError("Length must be 2.")
-    x[0] = x[0] + x[1]
-    x[1] = x[0] - 2.0 * x[1]
-    return x
+    return _updown_to_magnet(x, 0)
 
 
 def updown_to_magnet_2(x: Tensor) -> Tensor:
-    """In-place conversion: up/down → charge/magnetization, 2D (..., 2, n_shells)."""
+    """Convert up/down to charge/magnetization, 2D (..., 2, n_shells)."""
     if x.shape[-2] != 2:
         raise ValueError("Second-to-last dimension must be 2.")
-    x[..., 0, :] = x[..., 0, :] + x[..., 1, :]
-    x[..., 1, :] = x[..., 0, :] - 2.0 * x[..., 1, :]
-    return x
+    return _updown_to_magnet(x, -2)
 
 
 def updown_to_magnet_3(x: Tensor) -> Tensor:
-    """In-place conversion: up/down → charge/magnetization, 3D (..., :, :, 2)."""
+    """Convert up/down to charge/magnetization, 3D (..., :, :, 2)."""
     if x.shape[-1] != 2:
         raise ValueError("Last dimension must be 2.")
-    x[..., 0] = x[..., 0] + x[..., 1]
-    x[..., 1] = x[..., 0] - 2.0 * x[..., 1]
-    return x
+    return _updown_to_magnet(x, -1)
 
 
 def updown_to_magnet_4(x: Tensor) -> Tensor:
-    """In-place conversion: up/down → charge/magnetization, 4D (..., :, :, :, 2)."""
+    """Convert up/down to charge/magnetization, 4D (..., :, :, :, 2)."""
     if x.shape[-1] != 2:
         raise ValueError("Last dimension must be 2.")
-    x[..., 0] = x[..., 0] + x[..., 1]
-    x[..., 1] = x[..., 0] - 2.0 * x[..., 1]
-    return x
+    return _updown_to_magnet(x, -1)
 
 
 # === General Formulas ===
 
 
 def magnet_to_updown(x: Tensor) -> Tensor:
-    """In-place conversion: charge/magnetization → up/down.
-    Works for any tensor where exactly one dimension has length 2."""
+    """Convert charge/magnetization to up/down along the last length-2 axis."""
     # locate spin dimension
     dims = [i for i, s in enumerate(x.shape) if s == 2]
     if not dims:
         raise ValueError("No dimension of length 2 found.")
     dim = dims[-1]
 
-    # compute slices and update sequentially
-    a = x.select(dim, 0)
-    b = x.select(dim, 1)
-    a.copy_(0.5 * (a + b))
-    b.copy_(a - b)
-    return x
+    return _magnet_to_updown(x, dim)
 
 
 def updown_to_magnet(x: Tensor) -> Tensor:
-    """In-place conversion: up/down → charge/magnetization.
-    Works for any tensor where exactly one dimension has length 2."""
+    """Convert up/down to charge/magnetization along the last length-2 axis."""
     dims = [i for i, s in enumerate(x.shape) if s == 2]
     if not dims:
         raise ValueError("No dimension of length 2 found.")
     dim = dims[-1]
 
-    a = x.select(dim, 0)
-    b = x.select(dim, 1)
-    a.add_(b)
-    b.copy_(a - 2.0 * b)
-    return x
+    return _updown_to_magnet(x, dim)

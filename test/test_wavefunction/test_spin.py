@@ -102,3 +102,22 @@ def test_magnet_to_updown_scf_hamiltonian_layout(dtype: torch.dtype) -> None:
     h_cm_rt = h_cm_rt.movedim(-1, -3)
 
     assert torch.allclose(h_cm_rt, h_cm_ref, atol=tol)
+
+
+@pytest.mark.parametrize(
+    "conversion",
+    [spin.magnet_to_updown_2, spin.updown_to_magnet_2],
+)
+def test_spin_conversion_autograd(conversion) -> None:
+    """Conversions must support leaf tensors without in-place mutations."""
+    source = torch.randn(
+        (2, 4), dtype=torch.double, device=DEVICE, requires_grad=True
+    )
+    source_before = source.detach().clone()
+
+    converted = conversion(source)
+    converted.square().sum().backward()
+
+    assert source.grad is not None
+    assert torch.isfinite(source.grad).all()
+    assert torch.equal(source.detach(), source_before)

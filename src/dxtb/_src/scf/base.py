@@ -485,6 +485,14 @@ class BaseSCF:
         # evaluate final energy
         energy = self.get_energy(q)
         fenergy = self.get_electronic_free_energy()
+        potential = self.charges_to_potential(q)
+
+        # Spin-resolved atomic multipoles are observable wavefunction data in
+        # tblite, but dxtb's multipole SCF variables and potentials are total
+        # charge quantities. Attach charge/magnetization multipoles only after
+        # evaluating the energy and potential to preserve that variational graph.
+        if self._nspin > 1:
+            self._set_spin_multipoles(q, self._data.density)
 
         OutputHandler.write_stdout(77 * "-", v=3)
         OutputHandler.write_stdout("", v=3)
@@ -498,7 +506,7 @@ class BaseSCF:
             "fenergy": fenergy,
             "hamiltonian": self._data.hamiltonian,
             "occupation": self._data.occupation,
-            "potential": self.charges_to_potential(q),
+            "potential": potential,
             "iterations": self._data.iter,
         }
 
@@ -627,7 +635,8 @@ class BaseSCF:
 
         occ = torch.clamp(self._data.occupation, min=eps)
         occ1 = torch.clamp(1 - self._data.occupation, min=eps)
-        g = torch.log(occ**occ * occ1**occ1).sum(-2) * self.kt
+        g_spin = torch.log(occ**occ * occ1**occ1) * self.kt
+        g = g_spin.sum(-2)
 
         mode = self.config.fermi.partition
 
@@ -645,12 +654,20 @@ class BaseSCF:
         # partition to atoms via Mulliken population analysis
         if mode == labels.FERMI_PARTITION_ATOMIC:
             # "electronic entropy" density matrix
-            density = einsum(
-                "...ik,...k,...jk->...ij",
-                self._data.evecs,  # sorted by energy, starting with lowest
-                g,
-                self._data.evecs,  # transposed
-            )
+            if self._nspin > 1:
+                density = einsum(
+                    "...sik,...sk,...sjk->...sij",
+                    self._data.evecs,
+                    g_spin,
+                    self._data.evecs,
+                ).sum(-3)
+            else:
+                density = einsum(
+                    "...ik,...k,...jk->...ij",
+                    self._data.evecs,
+                    g,
+                    self._data.evecs,
+                )
 
             return mulliken.get_atomic_populations(
                 self._data.ints.overlap, density, self._data.ihelp
@@ -862,7 +879,7 @@ class BaseSCF:
                 batch_mode=self.config.batch_mode,
             )
 
-        # Atomic dipole moments (dipole charges) — from total density
+        # Atomic dipole moments (dipole charges) from total density
         if ints.dipole is not None:
             charges.dipole = self._data.ihelp.reduce_orbital_to_atom(
                 -einsum("...ik,...mki->...im", P_total, ints.dipole),
@@ -870,7 +887,7 @@ class BaseSCF:
                 dim=-2,
             )
 
-        # Atomic quadrupole moments (quadrupole charges) — from total density
+        # Atomic quadrupole moments (quadrupole charges) from total density
         if ints.quadrupole is not None:
             charges.quad = self._data.ihelp.reduce_orbital_to_atom(
                 -einsum("...ik,...mki->...im", P_total, ints.quadrupole),
@@ -879,6 +896,29 @@ class BaseSCF:
             )
 
         return charges
+
+    def _set_spin_multipoles(self, charges: Charges, density: Tensor) -> None:
+        """Attach final atomic multipoles in charge/magnetization basis."""
+        ints = self._data.ints
+        if ints.dipole is not None:
+            dipole_ab = self._data.ihelp.reduce_orbital_to_atom(
+                -einsum("...sik,...mki->...sim", density, ints.dipole),
+                extra=True,
+                dim=-2,
+            )
+            charges.dipole = wfspin.updown_to_magnet(
+                dipole_ab.movedim(-3, -1)
+            ).movedim(-1, -3)
+
+        if ints.quadrupole is not None:
+            quad_ab = self._data.ihelp.reduce_orbital_to_atom(
+                -einsum("...sik,...mki->...sim", density, ints.quadrupole),
+                extra=True,
+                dim=-2,
+            )
+            charges.quad = wfspin.updown_to_magnet(
+                quad_ab.movedim(-3, -1)
+            ).movedim(-1, -3)
 
     @timer_decorator("Fock build", "SCF")
     def potential_to_hamiltonian(self, potential: Potential) -> Tensor:
@@ -1033,8 +1073,12 @@ class BaseSCF:
 
         Conversion to alpha/beta:
 
-        - H_alpha = 0.5 * (H_charge + H_mag)
-        - H_beta  = 0.5 * (H_charge - H_mag)
+        The representation conversion itself contains a factor of one half.
+        As in tblite, both resulting blocks are therefore multiplied by two
+        before diagonalization:
+
+        - H_alpha = H_charge + H_mag
+        - H_beta  = H_charge - H_mag
 
         Each spin channel is diagonalized and filled independently.
         Returns density ``(..., 2, nao, nao)`` in alpha/beta basis.
@@ -1050,8 +1094,15 @@ class BaseSCF:
         h_beta = h_ab[..., 1, :, :]
 
         # --- diagonalize each spin channel ---
+        # Scaling a complete generalized eigenproblem does not change its
+        # eigenvectors. Diagonalize the converted half-scaled blocks and scale
+        # the eigenvalues afterwards. This is spectrally identical to tblite's
+        # pre-diagonalization factor of two, while avoiding a different and
+        # unstable PyTorch backward branch for exactly degenerate eigenvalues.
         evals_a, evecs_a = self.diagonalize(h_alpha)
         evals_b, evecs_b = self.diagonalize(h_beta)
+        evals_a = 2.0 * evals_a
+        evals_b = 2.0 * evals_b
 
         # Store both spin channels consistently with UHF allocations:
         # evals shape (..., 2, nao), evecs shape (..., 2, nao, nao)
@@ -1078,6 +1129,7 @@ class BaseSCF:
                 mask=mask,
                 maxiter=self.config.fermi.maxiter,
                 thr=self.config.fermi.thresh,
+                equalize_degenerate=True,
             )
 
             _nel = self._data.occupation.sum(-1)
