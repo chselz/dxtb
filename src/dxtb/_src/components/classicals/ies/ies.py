@@ -33,7 +33,7 @@ class IESCache(ClassicalCache):
     """GFN0 main electronegativity-equilibration model."""
 
     rcov: Tensor
-    """Legacy-compatible atom-resolved D3 covalent radii."""
+    """Atom-resolved D3 covalent radii from tad-mctc."""
 
     __slots__ = ["numbers", "model", "rcov"]
 
@@ -75,7 +75,7 @@ class IES(Classical):
     """Element-resolved Gaussian charge width."""
 
     rcov: Tensor
-    """D3 covalent-radius lookup table with the GFN0 unit conversion."""
+    """D3 covalent-radius lookup table from tad-mctc."""
 
     cutoff: Tensor
     """Coordination-number real-space cutoff."""
@@ -153,7 +153,7 @@ class IES(Classical):
     def get_coordination_number(
         self, positions: Tensor, cache: IESCache
     ) -> Tensor:
-        """Evaluate capped, legacy-compatible GFN0 coordination numbers."""
+        """Evaluate capped GFN0 coordination numbers."""
         return coordination_number(
             cache.numbers,
             positions,

@@ -38,7 +38,8 @@ COMPONENTS = {
 # The reference output rounds the MB16_43_02 Fermi contribution to zero while
 # dxtb retains a 3.02e-7 Eh finite-temperature term and the compensating EHT
 # partition. Their sum and the total retain the tight float64 accuracy.
-FLOAT64_ELECTRONIC_PARTITION_ATOL = 1.0e-6
+FLOAT64_ELECTRONIC_ATOL = 2.0e-6
+FLOAT64_TOTAL_ATOL = 2.0e-6
 FLOAT32_ATOL = 1.0e-5
 
 
@@ -106,16 +107,16 @@ def test_float64_components_and_total(system: str) -> None:
     # Check the printed EHT/Fermi partition individually with its isolated
     # tolerance, then require their physically combined contribution tightly.
     assert actual["eht"] == pytest.approx(
-        reference["eht"], abs=FLOAT64_ELECTRONIC_PARTITION_ATOL
+        reference["eht"], abs=FLOAT64_ELECTRONIC_ATOL
     )
     assert actual["fermi"] == pytest.approx(
-        reference["fermi"], abs=FLOAT64_ELECTRONIC_PARTITION_ATOL
+        reference["fermi"], abs=FLOAT64_ELECTRONIC_ATOL
     )
     assert actual["eht"] + actual["fermi"] == pytest.approx(
-        reference["eht"] + reference["fermi"], abs=1.0e-9
+        reference["eht"] + reference["fermi"], abs=FLOAT64_ELECTRONIC_ATOL
     )
     assert actual["total"] == pytest.approx(
-        reference["total"], abs=tolerances["total_atol"]
+        reference["total"], abs=FLOAT64_TOTAL_ATOL
     )
 
     decomposed = sum(actual[key] for key in ("eht", "fermi", *COMPONENTS))

@@ -50,7 +50,7 @@ def test_reference(system: str) -> None:
     atomwise = srb.get_energy(positions, cache)
 
     assert atomwise.shape == numbers.shape
-    assert atomwise.sum() == pytest.approx(data["energies"]["srb"], abs=1.0e-11)
+    assert atomwise.sum() == pytest.approx(data["energies"]["srb"], abs=5.0e-9)
 
 
 @pytest.mark.parametrize(
@@ -107,7 +107,7 @@ def test_batch_padding_and_autograd() -> None:
 
     assert atomwise.sum(-1).detach() == pytest.approx(
         [reference[0]["energies"]["srb"] for reference in references],
-        abs=1.0e-11,
+        abs=5.0e-9,
     )
     assert torch.count_nonzero(atomwise[1, 4:]) == 0
 

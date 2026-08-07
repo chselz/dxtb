@@ -12,21 +12,18 @@ import torch
 from tad_mctc import storch
 from tad_mctc.batch import real_pairs
 from tad_mctc.convert import any_to_tensor, symmetrize
+from tad_mctc.data import radii
 from tad_mctc.ncoord import coordination_number, erf_count
+from tad_mctc.units import EV2AU
 from tad_multicharge.model.eeq import EEQModel
 
 from dxtb import IndexHelper
-from dxtb._src.components.classicals.gfn0 import legacy_d3_radii
 from dxtb._src.param import Param, ParamModule
 from dxtb._src.typing import Any, Self, Tensor, override
 
 from .base import PAD, BaseHamiltonian
 
 __all__ = ["GFN0Hamiltonian"]
-
-
-GFN0_EV2AU = 1.0 / 27.21138505
-"""Legacy energy conversion used by the GFN0 reference implementation."""
 
 
 class GFN0Hamiltonian(BaseHamiltonian):
@@ -55,17 +52,13 @@ class GFN0Hamiltonian(BaseHamiltonian):
 
         # The standalone reference keeps H0 in eV and converts its electronic
         # energy afterwards. dxtb keeps H0 in Hartree, so convert every
-        # energy-like H0 table with the exact compatibility constant here.
+        # energy-like H0 table with tad-mctc's canonical conversion here.
         self.selfenergy = (
-            par.get_elem_param(self.unique, "levels", pad_val=0) * GFN0_EV2AU
+            par.get_elem_param(self.unique, "levels", pad_val=0) * EV2AU
         )
-        self.kcn = (
-            par.get_elem_param(self.unique, "kcn", pad_val=0) * GFN0_EV2AU
-        )
-        self.kq = par.get_elem_param(self.unique, "kq", pad_val=0) * GFN0_EV2AU
-        self.kqat = (
-            par.get_elem_param(self.unique, "kqat", pad_val=0) * GFN0_EV2AU
-        )
+        self.kcn = par.get_elem_param(self.unique, "kcn", pad_val=0) * EV2AU
+        self.kq = par.get_elem_param(self.unique, "kq", pad_val=0) * EV2AU
+        self.kqat = par.get_elem_param(self.unique, "kqat", pad_val=0) * EV2AU
 
         self.h0rad = par.get_elem_param(self.unique, "h0rad", pad_val=1)
         self.kdiff = par.get("hamiltonian.xtb.kdiff")
@@ -84,7 +77,7 @@ class GFN0Hamiltonian(BaseHamiltonian):
             **self.dd,
         )
 
-        self.cn_radii = legacy_d3_radii(**self.dd)[numbers]
+        self.cn_radii = radii.COV_D3(**self.dd)[numbers]
         self.cn_cutoff = par.get("charge.eeq.cutoff")
         self.cn_max = par.get("charge.eeq.cn_max")
         self.cn_kcn = par.get("charge.eeq.kcn")
@@ -200,7 +193,7 @@ class GFN0Hamiltonian(BaseHamiltonian):
         return kscale * zeta_weight
 
     def get_coordination_number(self, positions: Tensor) -> Tensor:
-        """Evaluate capped, legacy-compatible GFN0 coordination numbers."""
+        """Evaluate capped GFN0 coordination numbers."""
         if self.cn is None:  # pragma: no cover - initialized above
             raise RuntimeError("GFN0 coordination-number function is missing.")
         return self.cn(self.numbers, positions)

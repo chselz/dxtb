@@ -31,36 +31,6 @@ If you directly use a corresponding method wrapper such as
     # equivalent
     calc2 = dxtb.Calculator(numbers, dxtb.GFN1_XTB)
 
-GFN0-xTB is available through the same two entry points. It is currently a
-gas-phase energy method and its electronic problem is deliberately
-non-self-consistent, so the returned SCF iteration count is zero.
-
-.. code-block:: python
-
-    import torch
-    import dxtb
-
-    dd = {"dtype": torch.double, "device": torch.device("cpu")}
-    numbers = torch.tensor([8, 1, 1], device=dd["device"])
-    positions = torch.tensor(
-        [
-            [0.0000000, 0.0000000, -0.7428855],
-            [-1.4347267, 0.0000000, 0.3714427],
-            [1.4347267, 0.0000000, 0.3714427],
-        ],
-        **dd,
-    )
-
-    calc = dxtb.calculators.GFN0Calculator(numbers, **dd)
-    result = calc.singlepoint(positions)
-    print(result.total.sum(), result.iter)  # result.iter is 0 by design
-
-The corresponding command-line spelling is:
-
-.. code-block:: bash
-
-    dxtb --method gfn0 structure.xyz
-
 We recommend to always pass the (floating point) :class:`~torch.dtype` and
 :class:`~torch.device` arguments to the constructor to ensure consistency.
 

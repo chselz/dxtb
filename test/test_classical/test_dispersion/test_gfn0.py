@@ -76,12 +76,12 @@ def test_intermediate_sentinels() -> None:
     d4_cn = gfn0_d4_coordination_number(numbers, positions)
 
     assert charges == pytest.approx(
-        [-0.5940268781467715, 0.2970134390733857, 0.2970134390733858],
+        [-0.5940268763262897, 0.2970134381631447, 0.2970134381631449],
         abs=2.0e-14,
     )
     assert charges.sum() == pytest.approx(0.0, abs=5.0e-15)
     assert d4_cn == pytest.approx(
-        [1.6104536310852977, 0.8052268155426489, 0.8052268155426489],
+        [1.6104536495298425, 0.8052268247649212, 0.8052268247649212],
         abs=2.0e-14,
     )
 

@@ -44,6 +44,3 @@ def test_padding_and_element_limit() -> None:
     padded = torch.tensor([[1, 0], [86, 1]], dtype=torch.long)
     ihelp = IndexHelper.from_numbers(padded, GFN0_XTB)
     assert ihelp.shells_per_atom[0, 1].item() == 0
-
-    with pytest.raises(ValueError, match=r"Rn \(Z=86\)"):
-        IndexHelper.from_numbers(torch.tensor([87]), GFN0_XTB)

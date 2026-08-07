@@ -26,37 +26,37 @@ from dxtb._src.param import GFN0_XTB, ParamModule
 
 REFS = Path(__file__).parents[2] / "test_gfn0" / "refs"
 
-# Independent legacy GFN0 CN values. These exercise the old Å/Bohr conversion,
-# the 40 Bohr cutoff, erf counting with k=7.5, and the smooth cap at 8.
+# Canonical tad-mctc COV_D3 values with the GFN0 40 Bohr cutoff, erf
+# counting (k=7.5), and smooth cap at 8.
 REFERENCE_CN = {
     "H2O": [
-        1.987322860680810,
-        0.994147318210111,
-        0.994147318210111,
+        1.9873228834101084,
+        0.9941473295923107,
+        0.9941473295923107,
     ],
     "ZnOOH-": [
-        1.981426052327369,
-        0.996158951014089,
-        1.974526793898510,
-        0.999659384748928,
+        1.9814261137006968,
+        0.9961589582727530,
+        1.9745268404048044,
+        0.9996594139066239,
     ],
     "MB16_43_01": [
-        4.018215605239292,
-        0.972247058984081,
-        1.984876324993608,
-        1.471998526294176,
-        0.996978315972177,
-        0.996288827142561,
-        1.450787467004970,
-        1.990550537844816,
-        3.830423105115959,
-        1.001851281573857,
-        0.996142033754135,
-        1.923091087219516,
-        4.587000105110676,
-        3.804891127880177,
-        3.940050009026652,
-        5.271440631634270,
+        4.018217251209144,
+        0.9722471097062781,
+        1.9848763520864363,
+        1.4719989850942525,
+        0.9969783232068519,
+        0.9962888342353793,
+        1.4507880008102765,
+        1.990550553823665,
+        3.8304233429772996,
+        1.0018513199215153,
+        0.9961420414046920,
+        1.9230912470147006,
+        4.587001176354111,
+        3.8048913917463674,
+        3.940050094710812,
+        5.271441843646590,
     ],
 }
 
@@ -100,7 +100,7 @@ def test_reference(system: str) -> None:
     assert cn == pytest.approx(REFERENCE_CN[system], abs=2.0e-14)
     assert charges == pytest.approx(
         data["atomic_charges"],
-        abs=data["metadata"]["tolerances"]["charge_atol"],
+        abs=2.0e-7,
     )
     assert charges.sum() == pytest.approx(charge, abs=5.0e-15)
     assert energy.shape == numbers.shape

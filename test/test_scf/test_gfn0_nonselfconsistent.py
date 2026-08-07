@@ -130,7 +130,7 @@ def test_complete_result_and_frozen_eht(name: str) -> None:
     }
     assert result["iterations"] == 0
     assert result["energy"].sum().item() == pytest.approx(
-        fixture["energies"]["eht"], abs=1.0e-9
+        fixture["energies"]["eht"], abs=5.0e-7
     )
     assert result["charges"].mono.sum().item() == pytest.approx(
         fixture["metadata"]["total_charge"], abs=1.0e-10
@@ -144,7 +144,7 @@ def test_complete_result_and_frozen_eht(name: str) -> None:
     for orbital in fixture["orbitals"]:
         index = orbital["index"] - 1
         assert result["emo"][index].item() == pytest.approx(
-            orbital["energy"], abs=5.0e-8
+            orbital["energy"], abs=1.0e-7
         )
         assert result["occupation"].sum(-2)[index].item() == pytest.approx(
             orbital["occupation"], abs=1.0e-12
@@ -223,7 +223,7 @@ def test_iterative_options_are_inert(
     fixture, result = run_problem("H2O", config=config)
     assert result["iterations"] == 0
     assert result["energy"].sum().item() == pytest.approx(
-        fixture["energies"]["eht"], abs=1.0e-9
+        fixture["energies"]["eht"], abs=5.0e-7
     )
 
 

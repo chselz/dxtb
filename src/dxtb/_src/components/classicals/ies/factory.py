@@ -7,11 +7,11 @@
 from __future__ import annotations
 
 import torch
+from tad_mctc.data import radii
 
 from dxtb._src.param import Param, ParamModule
 from dxtb._src.typing import DD, Tensor, get_default_dtype
 
-from ..gfn0 import legacy_d3_radii
 from .ies import IES
 
 __all__ = ["new_ies"]
@@ -58,7 +58,7 @@ def new_ies(
         eeq_kcn=par.get_elem_param(elements, "eeq_kcn", pad_val=0),
         eta=par.get_elem_param(elements, "eeq_eta", pad_val=0),
         rad=par.get_elem_param(elements, "eeq_rad", pad_val=0),
-        rcov=legacy_d3_radii(**dd),
+        rcov=radii.COV_D3(**dd),
         cutoff=par.get("charge.eeq.cutoff"),
         cn_max=par.get("charge.eeq.cn_max"),
         cn_kcn=par.get("charge.eeq.kcn"),

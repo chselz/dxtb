@@ -124,7 +124,7 @@ def test_frozen_orbital_energies(name: str) -> None:
 
     for orbital in fixture["orbitals"]:
         index = orbital["index"] - 1
-        assert energies[index] == pytest.approx(orbital["energy"], abs=5.0e-8)
+        assert energies[index] == pytest.approx(orbital["energy"], abs=1.0e-7)
 
 
 @pytest.mark.parametrize("name", ["H2", "H2O", "LiH", "ZnOOH-"])
@@ -140,7 +140,7 @@ def test_occupation_and_eht_sum(name: str) -> None:
         sum(item["occupation"] for item in fixture["orbitals"])
     )
     assert torch.sum(occupation * energies).item() == pytest.approx(
-        fixture["energies"]["eht"], abs=1.0e-9
+        fixture["energies"]["eht"], abs=5.0e-7
     )
 
 

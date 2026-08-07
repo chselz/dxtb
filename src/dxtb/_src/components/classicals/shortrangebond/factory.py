@@ -7,11 +7,11 @@
 from __future__ import annotations
 
 import torch
+from tad_mctc.data import radii
 
 from dxtb._src.param import Param, ParamModule
 from dxtb._src.typing import DD, Tensor, get_default_dtype
 
-from ..gfn0 import legacy_d3_radii
 from .srb import ShortRangeBond
 
 __all__ = ["new_srb"]
@@ -42,7 +42,7 @@ def new_srb(
         r0=par.get_elem_param(unique, "srb_r0", pad_val=0),
         cnfak=par.get_elem_param(unique, "srb_cnfak", pad_val=0),
         en=par.get_elem_param(unique, "srb_en", pad_val=0),
-        rcov=legacy_d3_radii(**dd),
+        rcov=radii.COV_D3(**dd),
         shift=par.get("short_range.srb.shift"),
         prefactor=par.get("short_range.srb.prefactor"),
         steepness=par.get("short_range.srb.steepness"),

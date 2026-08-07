@@ -13,9 +13,9 @@ import json
 import re
 from pathlib import Path
 
+from tad_mctc.units import AU2AA, AU2EV
+
 MAX_ELEMENT = 86
-EV_PER_HARTREE_GFN0 = 27.21138505
-ANGSTROM_PER_BOHR_GFN0 = 0.52917726
 
 SYMBOLS = (
     "H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe "
@@ -201,9 +201,9 @@ def parameter_data(param_source: str, srb_source: str) -> dict[str, object]:
             "kcn": [kcn_angular[l] for l in angular],
             "kq": [kq_angular[l] for l in angular],
             "kqat": raw["kQAtom"][z - 1],
-            # The source literal is in Angstrom and is converted with the
-            # compatibility constant used by the original parametrization.
-            "h0rad": raw["atomicRad"][z - 1] / ANGSTROM_PER_BOHR_GFN0,
+            # The source literal is in Angstrom; store it in Bohr using the
+            # canonical tad-mctc conversion.
+            "h0rad": raw["atomicRad"][z - 1] / AU2AA,
             "zeff": raw["repZeff"][z - 1],
             "arep": raw["repAlpha"][z - 1],
             "en": raw["electronegativity"][z - 1],
@@ -271,7 +271,7 @@ def render(data: dict[str, object], param_hash: str, srb_hash: str) -> str:
         "# Source: sibling gfn0/src/gfn0_param.f90 and gfn0_srb.f90",
         f"# gfn0_param.f90 sha256: {param_hash}",
         f"# gfn0_srb.f90 sha256: {srb_hash}",
-        f"# Compatibility constants: {EV_PER_HARTREE_GFN0} eV/Eh, {ANGSTROM_PER_BOHR_GFN0} Angstrom/Bohr",
+        f"# Unit conversions from tad-mctc: {AU2EV} eV/Eh, {AU2AA} Angstrom/Bohr",
         "",
         "[meta]",
         'name = "GFN0-xTB"',

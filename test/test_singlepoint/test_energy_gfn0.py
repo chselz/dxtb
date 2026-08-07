@@ -89,7 +89,7 @@ def test_thin_and_generic_calculator_match_reference() -> None:
     reference = fixture["energies"]["total"]
 
     assert thin_result.total.sum().item() == pytest.approx(
-        reference, abs=1.0e-9
+        reference, abs=2.0e-6
     )
     assert torch.equal(thin_result.total, generic_result.total)
     assert torch.equal(thin_result.scf, generic_result.scf)

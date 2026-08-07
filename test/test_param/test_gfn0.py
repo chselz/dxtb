@@ -21,7 +21,7 @@ PARAMETER_FILE = (
     Path(__file__).parents[2] / "src/dxtb/_src/param/gfn0/gfn0-xtb.toml"
 )
 PARAMETER_SHA256 = (
-    "a8aa7847808e6bc96a2a09c572d30a35951d203fde65de6d6fda6dbdcf28c226"
+    "ee48e48b9334a84cc33752d572ca70708194c0120826d929b88191a77b88576e"
 )
 
 

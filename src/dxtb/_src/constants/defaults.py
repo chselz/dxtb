@@ -61,7 +61,8 @@ METHOD = labels.GFN1_XTB
 """General method for calculation from the xtb family."""
 
 METHOD_CHOICES = [
-    *labels.GFN0_XTB_STRS,
+    "gfn0",
+    "gfn0-xtb",
     "gfn1",
     "gfn1-xtb",
     "gfn2",

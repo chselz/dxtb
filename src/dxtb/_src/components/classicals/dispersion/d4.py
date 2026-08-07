@@ -42,7 +42,6 @@ from ..gfn0 import (
     GFN0_D4_GC,
     GFN0_D4_WF,
     gfn0_d4_coordination_number,
-    legacy_d3_radii,
 )
 from .base import Dispersion
 
@@ -288,7 +287,7 @@ class DispersionD4GFN0(DispersionD4):
                 **self.dd,
             ),
         )
-        kwargs.setdefault("rcov", legacy_d3_radii(**self.dd)[numbers])
+        kwargs.setdefault("rcov", radii.COV_D3(**self.dd)[numbers])
 
         cache = super().get_cache(numbers, ihelp, **kwargs)
         if cache.eeq_model is None:
