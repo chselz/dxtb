@@ -162,7 +162,7 @@ def parameter_data(param_source: str, srb_source: str) -> dict[str, object]:
         if len(srb[name]) != 86:
             raise ValueError(f"SRB {name} must contain 86 values.")
     if len(srb["p"]) != 8:
-        raise ValueError("SRB period polynomial must contain eight values.")
+        raise ValueError("SRB EN polynomial must contain eight values.")
 
     elements: dict[str, dict[str, object]] = {}
     for z, symbol in enumerate(SYMBOLS, 1):
@@ -237,8 +237,9 @@ def parameter_data(param_source: str, srb_source: str) -> dict[str, object]:
     return {
         "shell_scale": shell_scale,
         "pair_scale": pair_scale,
-        "period1": srb["p"][:4],
-        "period2": srb["p"][4:],
+        # Only row 2 contributes: SRB is restricted to B--F. The
+        # reference combines identical row coefficients as 0.005 * (p + p).
+        "enpoly": [0.01 * srb["p"][1], 0.01 * srb["p"][5]],
         "elements": elements,
     }
 
@@ -329,9 +330,12 @@ def render(data: dict[str, object], param_hash: str, srb_hash: str) -> str:
             "prefactor = -1.2900000000000000E-02",
             "steepness = 3.4847000000000001E+00",
             "enscale = 5.0969999999999993E-01",
-            f"period1 = {vector(data['period1'])}",
-            f"period2 = {vector(data['period2'])}",
-            "cutoff2 = 2.0000000000000000E+02",
+            f"enpoly = {vector(data['enpoly'])}",
+            'cn = "erf"',
+            "cn_cutoff = 4.0000000000000000E+01",
+            "cn_max = 8.0000000000000000E+00",
+            "cn_kcn = 7.5000000000000000E+00",
+            "pair_cutoff2 = 2.0000000000000000E+02",
         ]
     )
 

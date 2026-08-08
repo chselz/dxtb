@@ -13,7 +13,12 @@ from pathlib import Path
 import pytest
 import torch
 from pydantic import ValidationError
+from tad_mctc.ncoord import exp_count
 
+from dxtb._src.components.classicals.shortrangebond import (
+    ShortRangeBond,
+    new_srb,
+)
 from dxtb._src.components.interactions.coulomb import new_es2
 from dxtb._src.param import GFN0_XTB, Param, ParamModule
 
@@ -21,7 +26,7 @@ PARAMETER_FILE = (
     Path(__file__).parents[2] / "src/dxtb/_src/param/gfn0/gfn0-xtb.toml"
 )
 PARAMETER_SHA256 = (
-    "ee48e48b9334a84cc33752d572ca70708194c0120826d929b88191a77b88576e"
+    "59f04235a93552ac25c5b3ab74e004282b78b6b2520843d1dce812ccf31d9887"
 )
 
 
@@ -84,13 +89,12 @@ def test_pair_and_srb_sentinels() -> None:
     assert GFN0_XTB.short_range is not None
     assert GFN0_XTB.short_range.srb is not None
     srb = GFN0_XTB.short_range.srb
-    assert srb.period1 == pytest.approx(
-        [29.84522887, -1.70549806, 6.54013762, 6.39169003]
-    )
-    assert srb.period2 == pytest.approx(
-        [-8.87843763, 2.10878369, 0.08009374, -0.85808076]
-    )
-    assert srb.cutoff2 == 200.0
+    assert srb.enpoly == pytest.approx([-0.0170549806, 0.0210878369])
+    assert srb.cn == "erf"
+    assert srb.cn_cutoff == 40.0
+    assert srb.cn_max == 8.0
+    assert srb.cn_kcn == 7.5
+    assert srb.pair_cutoff2 == 200.0
 
 
 def test_artifact_fingerprint() -> None:
@@ -137,6 +141,25 @@ def test_method_specific_validation() -> None:
     data["element"]["H"]["unknown_gfn0_value"] = 1.0
     with pytest.raises(ValidationError, match="extra_forbidden"):
         Param(**data)
+
+
+def test_srb_owns_cn_parameters() -> None:
+    data = GFN0_XTB.clean_model_dump()
+    del data["charge"]
+    settings = data["short_range"]["srb"]
+    settings["cn"] = "exp"
+    settings["cn_cutoff"] = 25.0
+    settings["cn_max"] = 6.0
+    settings["cn_kcn"] = 5.0
+    settings["pair_cutoff2"] = 100.0
+
+    component = new_srb(torch.tensor([5, 6]), Param(**data), dtype=torch.double)
+    assert isinstance(component, ShortRangeBond)
+    assert component.counting_function is exp_count
+    assert component.cn_cutoff == 25.0
+    assert component.cn_max == 6.0
+    assert component.cn_kcn == 5.0
+    assert component.pair_cutoff2 == 100.0
 
 
 def test_eeq_does_not_activate_es2() -> None:

@@ -2,11 +2,30 @@
 #
 # SPDX-Identifier: Apache-2.0
 # Copyright (C) 2026 Grimme Group
-"""Factory for the GFN0 short-range bond correction."""
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Short-range Bond Correction: Factory
+=====================================
+
+A factory function to create instances of the :class:`dxtb.components.ShortRangeBond`
+class.
+"""
 
 from __future__ import annotations
 
 import torch
+from tad_mctc import ncoord
 from tad_mctc.data import radii
 
 from dxtb._src.param import Param, ParamModule
@@ -18,12 +37,32 @@ __all__ = ["new_srb"]
 
 
 def new_srb(
-    unique: Tensor,
+    numbers: Tensor,
     par: Param | ParamModule,
     device: torch.device | None = None,
     dtype: torch.dtype | None = None,
 ) -> ShortRangeBond | None:
-    """Create the GFN0 SRB contribution when its parameter block is present."""
+    """
+    Create new instance of ShortRangeBond class.
+
+    Parameters
+    ----------
+    numbers : Tensor
+        Atomic numbers of the system (shape: ``(natom,)``).
+    par : Param | ParamModule
+        Representation of an extended tight-binding model.
+
+    Returns
+    -------
+    ShortRangeBond | None
+        An instance of the ShortRangeBond class if the tight-binding model supports short-range bond correction,
+        otherwise None.
+
+    Raises
+    ------
+    ValueError
+        If he parametrization does not contain a short-range bond correction component.
+    """
     dd: DD = {
         "device": device,
         "dtype": dtype if dtype is not None else get_default_dtype(),
@@ -33,25 +72,24 @@ def new_srb(
 
     if "short_range" not in par or par.is_none("short_range.srb"):
         return None
-    if par.is_none("charge.eeq"):
-        raise ValueError("The SRB correction requires GFN0 charge.eeq CN data.")
-    if par.get("charge.eeq.cn") != "erf":
-        raise ValueError("The GFN0 SRB correction only supports erf CN.")
+
+    cn = par.get("short_range.srb.cn")
+    counting_function = getattr(ncoord, f"{cn}_count")
 
     return ShortRangeBond(
-        r0=par.get_elem_param(unique, "srb_r0", pad_val=0),
-        cnfak=par.get_elem_param(unique, "srb_cnfak", pad_val=0),
-        en=par.get_elem_param(unique, "srb_en", pad_val=0),
+        r0=par.get_elem_param(torch.unique(numbers), "srb_r0", pad_val=0),
+        cnfak=par.get_elem_param(torch.unique(numbers), "srb_cnfak", pad_val=0),
+        en=par.get_elem_param(torch.unique(numbers), "srb_en", pad_val=0),
         rcov=radii.COV_D3(**dd),
+        counting_function=counting_function,
         shift=par.get("short_range.srb.shift"),
         prefactor=par.get("short_range.srb.prefactor"),
         steepness=par.get("short_range.srb.steepness"),
         enscale=par.get("short_range.srb.enscale"),
-        period1=par.get("short_range.srb.period1"),
-        period2=par.get("short_range.srb.period2"),
-        cutoff2=par.get("short_range.srb.cutoff2"),
-        cn_cutoff=par.get("charge.eeq.cutoff"),
-        cn_max=par.get("charge.eeq.cn_max"),
-        cn_kcn=par.get("charge.eeq.kcn"),
+        enpoly=par.get("short_range.srb.enpoly"),
+        pair_cutoff2=par.get("short_range.srb.pair_cutoff2"),
+        cn_cutoff=par.get("short_range.srb.cn_cutoff"),
+        cn_max=par.get("short_range.srb.cn_max"),
+        cn_kcn=par.get("short_range.srb.cn_kcn"),
         **dd,
     )

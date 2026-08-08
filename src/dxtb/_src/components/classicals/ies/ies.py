@@ -2,7 +2,26 @@
 #
 # SPDX-Identifier: Apache-2.0
 # Copyright (C) 2026 Grimme Group
-"""GFN0-xTB isotropic electrostatic energy."""
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Isotropic Electrostatics: Class
+==============================
+
+This module implements the isotropic electrostatics class. The
+:class:`dxtb.components.IES` class is constructed similar to the
+:class:`dxtb.components.Halogen` class.
+"""
 
 from __future__ import annotations
 
@@ -16,31 +35,31 @@ from dxtb._src.typing import Any, Tensor, override
 
 from ..base import Classical, ClassicalCache, ComponentCache
 
-__all__ = ["IES", "IESCache", "LABEL_IES"]
+__all__ = ["IES", "LABEL_IES"]
 
 
 LABEL_IES = "IES"
-"""Stable label for the GFN0 isotropic electrostatic contribution."""
+"""Label for the :class:`.IES` component, coinciding with the class name."""
 
 
 class IESCache(ClassicalCache):
-    """Coordinate-independent data for the GFN0 EEQ solve."""
+    """Coordinate-independent data for the EEQ solve."""
 
     numbers: Tensor
     """Atomic numbers, including batch padding."""
 
-    model: EEQModel
-    """GFN0 main electronegativity-equilibration model."""
+    eeq: EEQModel
+    """ main electronegativity-equilibration model."""
 
     rcov: Tensor
     """Atom-resolved D3 covalent radii from tad-mctc."""
 
-    __slots__ = ["numbers", "model", "rcov"]
+    __slots__ = ["numbers", "eeq", "rcov"]
 
     def __init__(
         self,
         numbers: Tensor,
-        model: EEQModel,
+        eeq: EEQModel,
         rcov: Tensor,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
@@ -50,16 +69,13 @@ class IESCache(ClassicalCache):
             dtype=dtype if dtype is not None else rcov.dtype,
         )
         self.numbers = numbers
-        self.model = model
+        self.eeq = eeq
         self.rcov = rcov
 
 
 class IES(Classical):
     """
-    GFN0-xTB isotropic electrostatic energy from the main EEQ model.
-
-    The EEQ charges are transient inputs to this classical energy evaluation;
-    they are neither cached nor exposed as calculator result charges.
+    Representation of the isotropic electrostatics (IES) component in a tight-binding model.
     """
 
     chi: Tensor
@@ -124,36 +140,48 @@ class IES(Classical):
     def get_cache(
         self, numbers: Tensor, ihelp: IndexHelper | None = None, **_: Any
     ) -> IESCache:
-        """Construct or reuse coordinate-independent EEQ data."""
+        """
+        Store variables that are independent of the atomic positions in a cache object.
+
+        Parameters
+        ----------
+        numbers : Tensor
+            Atomic numbers of the system (shape: ``(natom,)``).
+        ihelp : IndexHelper | None
+            Helper class for indexing.
+
+        Returns
+        -------
+        IESCache
+            Cache object containing coordinate-independent data for the EEQ solve.
+        """
         cachvars = (numbers.detach().clone(),)
 
         if self.cache_is_latest(cachvars):
             if not isinstance(self.cache, IESCache):
                 raise TypeError(
-                    f"Cache in {self.label} is not of type 'IESCache'."
+                    f"Cache in {self.label} is not of type '{self.label}."
+                    "Cache'. This can only happen if you manually manipulate "
+                    "the cache."
                 )
             return self.cache
 
-        if numbers.numel() > 0 and int(numbers.max().item()) >= len(self.chi):
-            raise ValueError(
-                "Atomic numbers exceed the element range used to construct IES."
-            )
-
         self._cachevars = cachvars
-        model = EEQModel(
+
+        eeq = EEQModel(
             self.chi,
             self.eeq_kcn,
             self.eta,
             self.rad,
             **self.dd,
         )
-        self.cache = IESCache(numbers, model, self.rcov[numbers], **self.dd)
+        self.cache = IESCache(numbers, eeq, self.rcov[numbers], **self.dd)
         return self.cache
 
     def get_coordination_number(
         self, positions: Tensor, cache: IESCache
     ) -> Tensor:
-        """Evaluate capped GFN0 coordination numbers."""
+        """Evaluate capped coordination numbers."""
         return coordination_number(
             cache.numbers,
             positions,
@@ -172,7 +200,23 @@ class IES(Classical):
         charge: Tensor | float | int | None = None,
         **_: Any,
     ) -> Tensor:
-        """Calculate the atomwise GFN0 isotropic electrostatic energy."""
+        """
+        Calculate the isotropic electrostatics energy using the EEQ model.
+
+        Parameters
+        ----------
+        positions : Tensor
+            Atomic positions of the system (shape: ``(natom, 3)``).
+        cache : ComponentCache
+            Cache object containing coordinate-independent data for the EEQ solve.
+        charge : Tensor | float | int | None
+            Total molecular charge. If None, the energy is not computed.
+
+        Returns
+        -------
+        Tensor
+            Isotropic electrostatics energy of the system (shape: ``()``).
+        """
         if not isinstance(cache, IESCache):
             raise TypeError(f"Cache in {self.label} is not of type 'IESCache'.")
         if charge is None:
@@ -184,7 +228,7 @@ class IES(Classical):
             dtype=positions.dtype,
         )
         cn = self.get_coordination_number(positions, cache)
-        _charges, energy = cache.model.solve(
+        _charges, energy = cache.eeq.solve(
             cache.numbers,
             positions,
             total_charge,

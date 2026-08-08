@@ -48,14 +48,28 @@ class ShortRangeBond(BaseModel):
     enscale: float
     """Scaling factor applied to the Pauling electronegativity difference."""
 
-    period1: List[float]
-    """First four-entry period polynomial."""
+    enpoly: List[float]
+    """
+    Coefficients of the fitted-electronegativity polynomial that scales the
+    SRB reference distance. Entry ``n`` multiplies
+    ``abs(srb_en_i - srb_en_j) ** (n + 1)``; GFN0 therefore stores its linear
+    and quadratic coefficients in that order.
+    """
 
-    period2: List[float]
-    """Second four-entry period polynomial."""
+    cn: str
+    """Name of the tad-mctc coordination-number counting function."""
 
-    cutoff2: float
-    """Squared pair cutoff in Bohr squared."""
+    cn_cutoff: float
+    """Cutoff for the SRB coordination number in Bohr."""
+
+    cn_max: float
+    """Smooth upper bound applied to the SRB coordination number."""
+
+    cn_kcn: float
+    """Steepness of the SRB coordination-number counting function."""
+
+    pair_cutoff2: float
+    """Squared cutoff for selecting SRB pairs in Bohr squared."""
 
 
 class ShortRange(BaseModel):
