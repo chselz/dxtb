@@ -33,12 +33,10 @@ quantities must be carried out separately.
 
 from __future__ import annotations
 
-from math import isfinite
 from pathlib import Path
 from typing import Dict, Optional
 
-from pydantic import BaseModel, ConfigDict, model_validator
-from tad_mctc.data import pse
+from pydantic import BaseModel
 
 from dxtb._src.typing import Any, PathLike, Self, Type
 
@@ -69,8 +67,6 @@ class Param(BaseModel):
 
     .. _tblite: https://tblite.readthedocs.io
     """
-
-    model_config = ConfigDict(extra="forbid")
 
     meta: Optional[Meta] = None
     """Descriptive data on the model."""

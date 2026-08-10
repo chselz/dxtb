@@ -33,7 +33,7 @@ from dxtb._src.typing.exceptions import ParameterWarning
 
 from .base import Dispersion
 from .d3 import DispersionD3
-from .d4 import DispersionD4, DispersionD4GFN0
+from .d4 import DispersionD4
 
 __all__ = ["new_dispersion"]
 
@@ -55,9 +55,6 @@ def new_dispersion(
         Atomic numbers for all atoms in the system (shape: ``(..., nat)``).
     par : Param | ParamModule
         Representation of an extended tight-binding model.
-    charge : Tensor | None, optional
-        Total molecular charge. It may instead be supplied to
-        :meth:`Dispersion.get_energy` at runtime.
     ref_charges : Literal["eeq", "gfn2"], optional
         Reference charges for the dispersion model. This is only required for
         charge-dependent models. Default is ``"eeq"``.
@@ -73,20 +70,17 @@ def new_dispersion(
     Dispersion | None
         Instance of the Dispersion class or ``None`` if no dispersion is used.
 
+    Raises
+    ------
+    ValueError
+        Parametrization does not contain a dispersion correction.
+    ValueError
+        D4 parametrization is requested but no charge given.
     """
     dd: DD = {
         "device": device,
         "dtype": dtype if dtype is not None else get_default_dtype(),
     }
-
-    if isinstance(par, Param):
-        dispersion = getattr(par, "dispersion", None)
-        if (
-            dispersion is not None
-            and dispersion.d4 is not None
-            and not isinstance(dispersion.d4.sc, bool)
-        ):
-            raise ValueError("D4 self-consistency flag is not a boolean.")
 
     # compatibility with previous version based on `Param`
     if not isinstance(par, ParamModule):
@@ -123,25 +117,8 @@ def new_dispersion(
 
         # only non-self-consistent D4 is a classical component
         if not sc_is_set or par.is_false("dispersion.d4.sc"):
-            name = (
-                ""
-                if par.is_none("meta.name")
-                else str(par.get("meta.name")).casefold()
-            )
-            if name in {"gfn0-xtb", "gfn0xtb", "gfn0"}:
-                if par.is_none("charge.eeq"):
-                    raise ValueError(
-                        "GFN0 D4 requires charge.eeq CN parameters."
-                    )
-                return DispersionD4GFN0(
-                    numbers,
-                    param,
-                    cn_cutoff=par.get("charge.eeq.cutoff"),
-                    cn_max=par.get("charge.eeq.cn_max"),
-                    cn_kcn=par.get("charge.eeq.kcn"),
-                    device=device,
-                    dtype=dtype,
-                )
+            if charge is None:
+                raise ValueError("The total charge is required for DFT-D4.")
 
             return DispersionD4(
                 numbers,
@@ -156,12 +133,7 @@ def new_dispersion(
         param["s6"] = torch.tensor(0.0, **dd)
         param["s8"] = torch.tensor(0.0, **dd)
         return DispersionD4(
-            numbers,
-            param,
-            charge=charge,
-            ref_charges="gfn2",
-            device=device,
-            dtype=dtype,
+            numbers, param, ref_charges="gfn2", device=device, dtype=dtype
         )
 
     if not par.is_none("dispersion.d3") and not par.is_none("dispersion.d4"):
