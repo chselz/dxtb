@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 __all__ = ["Element"]
 
@@ -35,8 +35,6 @@ class Element(BaseModel):
     """
     Representation of the parameters for a species.
     """
-
-    model_config = ConfigDict(extra="forbid")
 
     shells: List[str]
     """Included shells with principal quantum number and angular momentum."""

@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 __all__ = ["PHamiltonian", "PHamiltonianXTB"]
 
@@ -63,8 +63,6 @@ class PHamiltonianXTB(BaseModel):
     self-energy and the distance polynomial.
     """
 
-    model_config = ConfigDict(extra="forbid")
-
     wexp: float
     """Exponent of the orbital exponent dependent off-site scaling factor"""
 
@@ -80,6 +78,7 @@ class PHamiltonianXTB(BaseModel):
     enshell: Optional[List[float]] = None
     """Angular-momentum-dependent electronegativity coefficients."""
 
+    # TODO: check if this can also be replaced by using enscale and then in the code itself do it quartic, i.e. enscale**4
     enscale4: Optional[float] = None
     """Quartic electronegativity scaling factor."""
 

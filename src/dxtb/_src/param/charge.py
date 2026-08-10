@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from dxtb._src.constants.xtb import DEFAULT_ES2_GEXP
 
@@ -37,8 +37,6 @@ class PSecondOrderEffective(BaseModel):
     Representation of the isotropic second-order charge interactions for a
     parametrization.
     """
-
-    model_config = ConfigDict(extra="forbid")
 
     gexp: float = DEFAULT_ES2_GEXP
     """Exponent of Coulomb kernel. """

@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 __all__ = ["PRepulsionEffective", "PRepulsion"]
 
@@ -35,8 +35,6 @@ class PRepulsionEffective(BaseModel):
     """
     Representation of the repulsion contribution for a parametrization.
     """
-
-    model_config = ConfigDict(extra="forbid")
 
     kexp: float
     """
