@@ -311,7 +311,6 @@ def render(data: dict[str, object], param_hash: str, srb_hash: str) -> str:
             "",
             "[repulsion.effective]",
             "kexp = 1.5000000000000000E+00",
-            "klight = 1.5000000000000000E+00",
             "enscale = -8.9999999999999997E-02",
             "cutoff = 4.0000000000000000E+01",
             "",

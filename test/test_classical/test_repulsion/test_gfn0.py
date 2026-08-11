@@ -16,7 +16,8 @@ from tad_mctc.batch import pack
 
 from dxtb import IndexHelper
 from dxtb._src.components.classicals.repulsion import (
-    GFN0Repulsion,
+    Repulsion,
+    RepulsionAnalytical,
     new_repulsion,
 )
 from dxtb._src.param import GFN0_XTB
@@ -43,8 +44,11 @@ def test_reference(system: str) -> None:
     repulsion = new_repulsion(
         torch.unique(numbers), GFN0_XTB, dtype=positions.dtype
     )
-    assert isinstance(repulsion, GFN0Repulsion)
+    assert isinstance(repulsion, Repulsion)
     assert repulsion.label == "Repulsion"
+    assert repulsion.klight is None
+    assert repulsion.en is not None
+    assert repulsion.enscale is not None
 
     ihelp = IndexHelper.from_numbers(numbers, GFN0_XTB)
     atomwise = repulsion.get_energy(
@@ -66,7 +70,7 @@ def test_pair_formula_and_cutoff() -> None:
     repulsion = new_repulsion(
         torch.unique(numbers), GFN0_XTB, dtype=positions.dtype
     )
-    assert isinstance(repulsion, GFN0Repulsion)
+    assert isinstance(repulsion, Repulsion)
     cache = repulsion.get_cache(
         numbers, IndexHelper.from_numbers(numbers, GFN0_XTB)
     )
@@ -101,7 +105,7 @@ def test_batch_padding_and_autograd() -> None:
     repulsion = new_repulsion(
         torch.unique(numbers), GFN0_XTB, dtype=positions.dtype
     )
-    assert isinstance(repulsion, GFN0Repulsion)
+    assert isinstance(repulsion, Repulsion)
     cache = repulsion.get_cache(
         numbers, IndexHelper.from_numbers(numbers, GFN0_XTB)
     )
@@ -117,11 +121,38 @@ def test_batch_padding_and_autograd() -> None:
     assert torch.isfinite(gradient).all()
 
 
-def test_no_custom_analytical_gradient() -> None:
-    """Do not select the unscaled legacy analytical-gradient class."""
-    with pytest.raises(NotImplementedError, match="GFN0 repulsion"):
-        new_repulsion(
-            torch.tensor([1]),
-            GFN0_XTB,
-            with_analytical_gradient=True,
-        )
+def test_shared_analytical_gradient() -> None:
+    """Use the shared analytical-gradient class with EN scaling."""
+    numbers = torch.tensor([5, 6])
+    positions = torch.tensor(
+        [[0.0, 0.0, 0.0], [2.0, 0.0, 0.0]], dtype=torch.float64
+    )
+    positions_auto = positions.clone().requires_grad_(True)
+    positions_analytical = positions.clone().requires_grad_(True)
+    unique = torch.unique(numbers)
+    ihelp = IndexHelper.from_numbers(numbers, GFN0_XTB)
+
+    repulsion_auto = new_repulsion(unique, GFN0_XTB, dtype=positions.dtype)
+    repulsion_analytical = new_repulsion(
+        unique,
+        GFN0_XTB,
+        with_analytical_gradient=True,
+        dtype=positions.dtype,
+    )
+    assert isinstance(repulsion_auto, Repulsion)
+    assert isinstance(repulsion_analytical, RepulsionAnalytical)
+
+    energy_auto = repulsion_auto.get_energy(
+        positions_auto, repulsion_auto.get_cache(numbers, ihelp)
+    ).sum()
+    energy_analytical = repulsion_analytical.get_energy(
+        positions_analytical,
+        repulsion_analytical.get_cache(numbers, ihelp),
+    ).sum()
+    (gradient_auto,) = torch.autograd.grad(energy_auto, positions_auto)
+    (gradient_analytical,) = torch.autograd.grad(
+        energy_analytical, positions_analytical
+    )
+
+    torch.testing.assert_close(energy_analytical, energy_auto)
+    torch.testing.assert_close(gradient_analytical, gradient_auto)

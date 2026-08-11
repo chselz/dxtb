@@ -18,8 +18,13 @@
 Parametrization: Repulsion
 ==========================
 
+<<<<<<< HEAD
 Definition of the repulsion contribution. The :class:`PRepulsionEffective`
 is used in GFN1-xTB and GFN2-xTB.
+=======
+Definition of the repulsion contribution. The :class:`EffectiveRepulsion` is
+used in the GFN-xTB methods.
+>>>>>>> 8354ecc (refactor repulsion)
 """
 
 from __future__ import annotations
@@ -49,16 +54,17 @@ class PRepulsionEffective(BaseModel):
     """
 
     enscale: Optional[float] = None
-    """Electronegativity-difference scaling of the pair exponent."""
+    """
+    Electronegativity-difference scaling of the pair exponent (only GFN0).
+    """
 
     cutoff: Optional[float] = None
-    """Real-space cutoff in Bohr."""
+    """Optional model-specific real-space cutoff in Bohr."""
 
 
 class PRepulsion(BaseModel):
     """
-    Possible repulsion parametrizations. Currently only the GFN1-xTB effective
-    repulsion is supported.
+    Possible repulsion parametrizations for the GFN-xTB methods.
     """
 
     effective: PRepulsionEffective
