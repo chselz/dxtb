@@ -58,7 +58,6 @@ class AnalyticalCalculator(EnergyCalculator):
     ]
     """Names of implemented methods of the Calculator."""
 
-    @cdec.requires_analytical_gradients
     @cdec.requires_positions_grad
     @cdec.cache
     def forces_analytical(

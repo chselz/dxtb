@@ -133,7 +133,7 @@ def hcore(
 
     name = par.meta.name.casefold()
     h0: BaseHamiltonian
-    if name in ("gfn0-xtb", "gfn0xtb", "gfn0"):
+    if name == "gfn0-xtb":
         h0 = GFN0Hamiltonian(numbers, par, ihelp, **dd, **kwargs)
     elif name == "gfn1-xtb":
         h0 = GFN1Hamiltonian(numbers, par, ihelp, **dd, **kwargs)
