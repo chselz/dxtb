@@ -37,7 +37,7 @@ import torch
 from dxtb import OutputHandler
 from dxtb._src.components.interactions import efield as efield
 from dxtb._src.components.interactions.field import efieldgrad as efieldgrad
-from dxtb._src.constants import defaults, labels
+from dxtb._src.constants import defaults
 from dxtb._src.typing import Any, Callable, Tensor, TypeVar
 from dxtb._src.utils.tensors import tensor_id
 

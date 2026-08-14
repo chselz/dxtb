@@ -33,7 +33,6 @@ from tad_mctc.typing import CNFunc, PathLike, Tensor, TensorLike
 from tad_mctc.units import EV2AU
 
 from dxtb import IndexHelper
-from dxtb._src.components.interactions import Potential
 from dxtb._src.param import Param, ParamModule
 
 from .abc import HamiltonianABC
@@ -371,18 +370,3 @@ class BaseHamiltonian(HamiltonianABC, TensorLike):
         h0 = symmetrize(hcore)
         self.matrix = h0
         return h0
-
-    def get_gradient(
-        self,
-        positions: Tensor,
-        overlap: Tensor,
-        doverlap: Tensor,
-        pmat: Tensor,
-        wmat: Tensor,
-        pot: Potential,
-        cn: Tensor,
-    ) -> tuple[Tensor, Tensor]:
-        """Reject unsupported analytical Hamiltonian gradients explicitly."""
-        raise NotImplementedError(
-            f"Analytical H0 gradient is not implemented for {self.label}."
-        )

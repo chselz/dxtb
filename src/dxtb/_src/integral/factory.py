@@ -71,7 +71,7 @@ def new_hcore(
             "instantiated."
         )
 
-    if par.meta.name.casefold() in ("gfn0-xtb", "gfn0xtb", "gfn0"):
+    if par.meta.name.casefold() in ("gfn0-xtb", "gfn0"):
         return new_hcore_gfn0(numbers, ihelp, par, device=device, dtype=dtype)
 
     if par.meta.name.casefold() in ("gfn1-xtb", "gfn1"):

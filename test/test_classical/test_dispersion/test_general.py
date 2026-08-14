@@ -50,18 +50,13 @@ def test_none() -> None:
         assert new_dispersion(dummy, _par2) is None
 
 
-def test_runtime_charge() -> None:
-    """Non-self-consistent D4 is constructed before runtime charge is known."""
+def test_fail_charge() -> None:
+    """Only non-self-consistent dispersion requires a total charge."""
     _par2 = GFN2_XTB.model_copy(deep=True)
     _par2.dispersion.d4.sc = False  # type: ignore
 
-    numbers = torch.tensor([1, 1])
-    disp = new_dispersion(numbers, _par2, charge=None)
-    assert disp is not None
-    cache = disp.get_cache(numbers)
-
-    with pytest.raises(ValueError, match="charge is required"):
-        disp.get_energy(torch.zeros((2, 3)), cache)
+    with pytest.raises(ValueError):
+        new_dispersion(torch.tensor(0.0), _par2, charge=None)
 
 
 def test_fail_no_dispersion() -> None:

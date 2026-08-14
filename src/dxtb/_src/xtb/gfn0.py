@@ -2,7 +2,24 @@
 #
 # SPDX-Identifier: Apache-2.0
 # Copyright (C) 2026 Grimme Group
-"""GFN0-xTB core Hamiltonian."""
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+xTB Hamiltonians: GFN0-xTB
+==========================
+
+The GFN0-xTB Hamiltonian.
+"""
 
 from __future__ import annotations
 
@@ -65,15 +82,11 @@ class GFN0Hamiltonian(BaseHamiltonian):
         self.enshell = par.get("hamiltonian.xtb.enshell")
         self.enscale4 = par.get("hamiltonian.xtb.enscale4")
 
-        max_element = int(numbers.max().item()) if numbers.numel() > 0 else 0
-        elements = torch.arange(
-            max_element + 1, dtype=numbers.dtype, device=numbers.device
-        )
         self.eeq_model = EEQModel(
-            par.get_elem_param(elements, "eeq_chi", pad_val=0),
-            par.get_elem_param(elements, "eeq_kcn", pad_val=0),
-            par.get_elem_param(elements, "eeq_eta", pad_val=0),
-            par.get_elem_param(elements, "eeq_rad", pad_val=0),
+            par.get_elem_param(torch.unique(numbers), "eeq_chi", pad_val=0),
+            par.get_elem_param(torch.unique(numbers), "eeq_kcn", pad_val=0),
+            par.get_elem_param(torch.unique(numbers), "eeq_eta", pad_val=0),
+            par.get_elem_param(torch.unique(numbers), "eeq_rad", pad_val=0),
             **self.dd,
         )
 
