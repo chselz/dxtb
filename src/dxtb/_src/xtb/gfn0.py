@@ -35,6 +35,7 @@ from tad_mctc.units import EV2AU
 from tad_multicharge.model.eeq import EEQModel
 
 from dxtb import IndexHelper
+from dxtb._src.components.interactions import Potential
 from dxtb._src.param import Param, ParamModule
 from dxtb._src.typing import Any, Self, Tensor, override
 
@@ -82,11 +83,15 @@ class GFN0Hamiltonian(BaseHamiltonian):
         self.enshell = par.get("hamiltonian.xtb.enshell")
         self.enscale4 = par.get("hamiltonian.xtb.enscale4")
 
+        max_element = int(numbers.max().item()) if numbers.numel() > 0 else 0
+        elements = torch.arange(
+            max_element + 1, dtype=numbers.dtype, device=numbers.device
+        )
         self.eeq_model = EEQModel(
-            par.get_elem_param(torch.unique(numbers), "eeq_chi", pad_val=0),
-            par.get_elem_param(torch.unique(numbers), "eeq_kcn", pad_val=0),
-            par.get_elem_param(torch.unique(numbers), "eeq_eta", pad_val=0),
-            par.get_elem_param(torch.unique(numbers), "eeq_rad", pad_val=0),
+            par.get_elem_param(elements, "eeq_chi", pad_val=0),
+            par.get_elem_param(elements, "eeq_kcn", pad_val=0),
+            par.get_elem_param(elements, "eeq_eta", pad_val=0),
+            par.get_elem_param(elements, "eeq_rad", pad_val=0),
             **self.dd,
         )
 
@@ -233,6 +238,21 @@ class GFN0Hamiltonian(BaseHamiltonian):
         kqat = self.ihelp.spread_uspecies_to_atom(self.kqat)
         shell_q2 = self.ihelp.spread_atom_to_shell(kqat * charges**2)
         return eps0 - kcn * shell_cn - kq * shell_q - shell_q2
+
+    @override
+    def get_gradient(
+        self,
+        positions: Tensor,
+        overlap: Tensor,
+        doverlap: Tensor,
+        pmat: Tensor,
+        wmat: Tensor,
+        pot: Potential,
+        cn: Tensor,
+    ) -> tuple[Tensor, Tensor]:
+        raise NotImplementedError(
+            "GFN0 analytical gradient is not implemented."
+        )
 
     @override
     def build(

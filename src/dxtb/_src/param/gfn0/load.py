@@ -49,4 +49,4 @@ from ..base import Param
 __all__ = ["GFN0_XTB"]
 
 
-GFN0_XTB: Param = Lazy(Path(__file__).parent / "GFN0-xtb.toml")  # type: ignore
+GFN0_XTB: Param = Lazy(Path(__file__).parent / "gfn0-xtb.toml")  # type: ignore

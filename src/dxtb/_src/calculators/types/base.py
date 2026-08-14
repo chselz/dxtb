@@ -652,7 +652,12 @@ class BaseCalculator(GetPropertiesMixin, TensorLike):
             else None
         )
         dispersion = (
-            new_dispersion(numbers, par, **dd)
+            new_dispersion(
+                numbers,
+                par,
+                charge=torch.tensor(defaults.CHRG, **dd),
+                **dd,
+            )
             if not {"all", "disp"} & set(self.opts.exclude)
             else None
         )

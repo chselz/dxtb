@@ -79,19 +79,16 @@ def new_ies(
             "The GFN0 IES component only supports erf coordination numbers."
         )
 
+    max_element = int(numbers.max().item()) if numbers.numel() > 0 else 0
+    elements = torch.arange(
+        max_element + 1, dtype=numbers.dtype, device=numbers.device
+    )
+
     return IES(
-        chi=par.get_elem_param(
-            torch.unique(numbers), par.element, "eeq_chi", pad_val=0, **dd
-        ),
-        eeq_kcn=par.get_elem_param(
-            torch.unique(numbers), par.element, "eeq_kcn", pad_val=0, **dd
-        ),
-        eta=par.get_elem_param(
-            torch.unique(numbers), par.element, "eeq_eta", pad_val=0, **dd
-        ),
-        rad=par.get_elem_param(
-            torch.unique(numbers), par.element, "eeq_rad", pad_val=0, **dd
-        ),
+        chi=par.get_elem_param(elements, "eeq_chi", pad_val=0),
+        eeq_kcn=par.get_elem_param(elements, "eeq_kcn", pad_val=0),
+        eta=par.get_elem_param(elements, "eeq_eta", pad_val=0),
+        rad=par.get_elem_param(elements, "eeq_rad", pad_val=0),
         rcov=radii.COV_D3(**dd),
         cutoff=par.get("charge.eeq.cutoff"),
         cn_max=par.get("charge.eeq.cn_max"),

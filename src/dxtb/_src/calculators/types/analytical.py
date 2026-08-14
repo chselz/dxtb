@@ -512,7 +512,6 @@ class AnalyticalCalculator(EnergyCalculator):
 
         return -total_grad
 
-    @cdec.requires_analytical_gradients
     @cdec.requires_efield
     @cdec.cache
     def dipole_analytical(
