@@ -32,6 +32,9 @@ class Refs(TypedDict):
     charge: Tensor
     """Total charge of the molecule"""
 
+    egfn0: Tensor
+    """H0 energy for GFN0-xTB"""
+
     egfn1: Tensor
     """SCF energy for GFN1-xTB"""
 
