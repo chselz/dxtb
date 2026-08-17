@@ -165,16 +165,14 @@ def test_exactly_one_diagonalization_and_no_initial_guess() -> None:
         dtype=torch.float64,
     )
 
-    with (
-        patch(
-            "dxtb._src.scf.pure.conversions.diagonalize", wraps=diagonalize
-        ) as diagonalize_mock,
-        patch(
+    with patch(
+        "dxtb._src.scf.pure.conversions.diagonalize", wraps=diagonalize
+    ) as diagonalize_mock:
+        with patch(
             "dxtb._src.scf.iterator.get_guess",
             side_effect=AssertionError("SCF guess must not be called"),
-        ),
-    ):
-        _, result = run_problem("H2O", config=config)
+        ):
+            _, result = run_problem("H2O", config=config)
 
     assert result["iterations"] == 0
     assert diagonalize_mock.call_count == 1
