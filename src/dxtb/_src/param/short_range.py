@@ -28,10 +28,10 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-__all__ = ["ShortRange", "ShortRangeBond"]
+__all__ = ["PShortRange", "PShortRangeBond"]
 
 
-class ShortRangeBond(BaseModel):
+class PShortRangeBond(BaseModel):
     """Parameters of the GFN0 short-range bond (SRB) correction."""
 
     model_config = ConfigDict(extra="forbid")
@@ -72,10 +72,10 @@ class ShortRangeBond(BaseModel):
     """Squared cutoff for selecting SRB pairs in Bohr squared."""
 
 
-class ShortRange(BaseModel):
+class PShortRange(BaseModel):
     """Available short-range corrections."""
 
     model_config = ConfigDict(extra="forbid")
 
-    srb: Optional[ShortRangeBond] = None
+    srb: Optional[PShortRangeBond] = None
     """Short-range bond correction."""

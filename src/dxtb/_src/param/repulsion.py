@@ -18,13 +18,8 @@
 Parametrization: Repulsion
 ==========================
 
-<<<<<<< HEAD
 Definition of the repulsion contribution. The :class:`PRepulsionEffective`
-is used in GFN1-xTB and GFN2-xTB.
-=======
-Definition of the repulsion contribution. The :class:`EffectiveRepulsion` is
 used in the GFN-xTB methods.
->>>>>>> 8354ecc (refactor repulsion)
 """
 
 from __future__ import annotations

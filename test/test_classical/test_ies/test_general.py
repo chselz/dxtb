@@ -36,12 +36,12 @@ def test_none() -> None:
     dummy = torch.tensor([0.0])
     _par = par.model_copy(deep=True)
 
-    assert _par.charge is not None
+    assert _par.eeq is not None
 
-    _par.charge.eeq = None
+    _par.eeq = None
     assert new_ies(dummy, _par) is None
 
-    del _par.charge.eeq
+    del _par.eeq
     assert new_ies(dummy, _par) is None
 
 

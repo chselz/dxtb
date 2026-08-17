@@ -23,8 +23,6 @@ Definition of the isotropic second-order charge interactions.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel
 
 from dxtb._src.constants.xtb import DEFAULT_ES2_GEXP
@@ -53,6 +51,3 @@ class PSecondOrder(BaseModel):
 
     effective: PSecondOrderEffective
     """Klopman-Ohno electrostatics."""
-
-    eeq: Optional[ChargeEEQ] = None
-    """Electronegativity-equilibration model."""

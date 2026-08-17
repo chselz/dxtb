@@ -70,10 +70,10 @@ def new_ies(
     if not isinstance(par, ParamModule):
         par = ParamModule(par, **dd)
 
-    if "charge" not in par or par.is_none("charge.eeq"):
+    if "eeq" not in par or par.is_none("eeq"):
         return None
 
-    cn = par.get("charge.eeq.cn")
+    cn = par.get("eeq.cn")
     if cn != "erf":
         raise ValueError(
             "The GFN0 IES component only supports erf coordination numbers."
@@ -90,8 +90,8 @@ def new_ies(
         eta=par.get_elem_param(elements, "eeq_eta", pad_val=0),
         rad=par.get_elem_param(elements, "eeq_rad", pad_val=0),
         rcov=radii.COV_D3(**dd),
-        cutoff=par.get("charge.eeq.cutoff"),
-        cn_max=par.get("charge.eeq.cn_max"),
-        cn_kcn=par.get("charge.eeq.kcn"),
+        cutoff=par.get("eeq.cutoff"),
+        cn_max=par.get("eeq.cn_max"),
+        cn_kcn=par.get("eeq.kcn"),
         **dd,
     )

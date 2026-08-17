@@ -61,11 +61,9 @@ class GFN0Hamiltonian(BaseHamiltonian):
 
         super().__init__(numbers, par, ihelp, device, dtype)
 
-        if par.is_none("charge.eeq"):
-            raise RuntimeError(
-                "GFN0 Hamiltonian requires charge.eeq parameters."
-            )
-        if par.get("charge.eeq.cn") != "erf":
+        if par.is_none("eeq"):
+            raise RuntimeError("GFN0 Hamiltonian requires EEQ parameters.")
+        if par.get("eeq.cn") != "erf":
             raise ValueError("GFN0 Hamiltonian only supports erf CN.")
 
         # The standalone reference keeps H0 in eV and converts its electronic
@@ -96,9 +94,9 @@ class GFN0Hamiltonian(BaseHamiltonian):
         )
 
         self.cn_radii = radii.COV_D3(**self.dd)[numbers]
-        self.cn_cutoff = par.get("charge.eeq.cutoff")
-        self.cn_max = par.get("charge.eeq.cn_max")
-        self.cn_kcn = par.get("charge.eeq.kcn")
+        self.cn_cutoff = par.get("eeq.cutoff")
+        self.cn_max = par.get("eeq.cn_max")
+        self.cn_kcn = par.get("eeq.kcn")
         self._set_cn_callable()
 
     def _set_cn_callable(self) -> None:
