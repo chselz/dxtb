@@ -394,6 +394,11 @@ class GetPropertiesMixin(ABC):
         spin: Tensor | float | int | None = defaults.SPIN,
         **kwargs: Any,
     ) -> Tensor:
+        """Return Wiberg bond orders.
+
+        Restricted output has shape ``(..., nat, nat)``. UHF output has shape
+        ``(..., 2, nat, nat)`` in total/magnetization representation.
+        """
         prop = self.get_property(
             "bond_orders", positions, chrg=chrg, spin=spin, **kwargs
         )
@@ -407,6 +412,10 @@ class GetPropertiesMixin(ABC):
         spin: Tensor | float | int | None = defaults.SPIN,
         **kwargs: Any,
     ) -> Tensor:
+        """Return MO coefficients.
+
+        UHF output has shape ``(..., 2, nao, nao)`` in alpha/beta form.
+        """
         prop = self.get_property(
             "coefficients", positions, chrg=chrg, spin=spin, **kwargs
         )
@@ -420,6 +429,10 @@ class GetPropertiesMixin(ABC):
         spin: Tensor | float | int | None = defaults.SPIN,
         **kwargs: Any,
     ) -> Tensor:
+        """Return the density matrix.
+
+        UHF output has shape ``(..., 2, nao, nao)`` in alpha/beta form.
+        """
         prop = self.get_property(
             "density", positions, chrg=chrg, spin=spin, **kwargs
         )
@@ -450,7 +463,8 @@ class GetPropertiesMixin(ABC):
         Returns
         -------
         Tensor
-            Orbital-resolved Mulliken charges of shape ``(..., nao)``.
+            Orbital-resolved Mulliken charges of shape ``(..., nao)``. UHF
+            output has shape ``(..., 2, nao)`` in total/magnetization form.
 
         Example
         -------
@@ -492,6 +506,11 @@ class GetPropertiesMixin(ABC):
         spin: Tensor | float | int | None = defaults.SPIN,
         **kwargs: Any,
     ) -> Tensor:
+        """Return orbital-resolved Mulliken charges.
+
+        Restricted output has shape ``(..., nao)``. UHF output has shape
+        ``(..., 2, nao)`` in total/magnetization form.
+        """
         return self.get_charges(positions, chrg=chrg, spin=spin, **kwargs)
 
     def get_iterations(
@@ -501,6 +520,7 @@ class GetPropertiesMixin(ABC):
         spin: Tensor | float | int | None = defaults.SPIN,
         **kwargs: Any,
     ) -> Tensor:
+        """Return the number of SCF iterations."""
         prop = self.get_property(
             "iterations", positions, chrg=chrg, spin=spin, **kwargs
         )
@@ -514,6 +534,11 @@ class GetPropertiesMixin(ABC):
         spin: Tensor | float | int | None = defaults.SPIN,
         **kwargs: Any,
     ) -> Tensor:
+        """Return molecular-orbital energies.
+
+        Restricted output has shape ``(..., nao)``. UHF output has shape
+        ``(..., 2, nao)`` in alpha/beta form.
+        """
         prop = self.get_property(
             "mo_energies", positions, chrg=chrg, spin=spin, **kwargs
         )
@@ -527,6 +552,12 @@ class GetPropertiesMixin(ABC):
         spin: Tensor | float | int | None = defaults.SPIN,
         **kwargs: Any,
     ) -> Tensor:
+        """Return alpha/beta orbital occupations.
+
+        Both restricted and UHF output have shape ``(..., 2, nao)``. In a
+        restricted calculation, the two occupation rows fill one shared set
+        of spatial orbitals.
+        """
         prop = self.get_property(
             "occupation", positions, chrg=chrg, spin=spin, **kwargs
         )
@@ -540,6 +571,11 @@ class GetPropertiesMixin(ABC):
         spin: Tensor | float | int | None = defaults.SPIN,
         **kwargs: Any,
     ) -> Tensor:
+        """Return orbital SCF potentials.
+
+        Restricted output has shape ``(..., nao)``. UHF output has shape
+        ``(..., 2, nao)`` in total/magnetization form.
+        """
         # pylint: disable=import-outside-toplevel
         from dxtb._src.scf.base import Potential
 

@@ -80,6 +80,11 @@ def get_alpha_beta_occupation(
                 f"number of electrons ({nel.shape})."
             )
 
+        if (uhf < 0).any():
+            raise ValueError(
+                f"Number of unpaired electrons ({uhf}) cannot be negative."
+            )
+
         if (uhf > nel.round()).any():
             raise ValueError(
                 f"Number of unpaired electrons ({uhf}) larger than "

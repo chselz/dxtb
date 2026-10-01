@@ -93,6 +93,7 @@ def solve(
     """
     n0, occupation = get_refocc(refocc, chrg, spin, ihelp)
     charges = get_guess(numbers, positions, chrg, ihelp, config.guess)
+    nspin = kwargs.pop("nspin", 2 if config.uhf_mode is True else 1)
 
     if not isinstance(config.scf_mode, int):
         raise ValueError(
@@ -114,6 +115,7 @@ def solve(
             cache=cache,
             integrals=integrals,
             config=config,
+            nspin=nspin,
             *args,
             **kwargs,
         )
@@ -140,6 +142,7 @@ def solve(
         cache=cache,
         integrals=integrals,
         config=config,
+        nspin=nspin,
         **kwargs,
     )(charges)
 

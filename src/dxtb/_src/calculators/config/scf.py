@@ -59,6 +59,9 @@ class ConfigSCF:
     mix_guess: bool
     """Include the initial guess in the mixing scheme."""
 
+    uhf_mode: bool
+    """Propagate independent alpha and beta wavefunction channels."""
+
     damp: float
     """Damping factor for the SCF iterations."""
 
@@ -150,6 +153,7 @@ class ConfigSCF:
         maxiter: int = defaults.MAXITER,
         mixer: str | int = defaults.MIXER,
         mix_guess: bool = defaults.MIX_GUESS,
+        uhf_mode: bool = defaults.UHF_MODE,
         damp: float = defaults.DAMP,
         damp_init: float = defaults.DAMP_INIT,
         damp_dynamic: bool = defaults.DAMP_DYNAMIC,
@@ -330,6 +334,12 @@ class ConfigSCF:
 
         self.maxiter = maxiter
         self.mix_guess = mix_guess
+        if not isinstance(uhf_mode, bool):
+            raise TypeError(
+                "The uhf_mode option must be of type 'bool', but "
+                f"'{type(uhf_mode)}' was given."
+            )
+        self.uhf_mode = uhf_mode
         self.damp = damp
         self.damp_init = damp_init
         self.damp_dynamic = damp_dynamic
@@ -373,6 +383,7 @@ class ConfigSCF:
                 "SCP Mode": labels.SCP_MODE_MAP[self.scp_mode],
                 "Maxiter": self.maxiter,
                 "Mixer": labels.MIXER_MAP[self.mixer],
+                "Unrestricted Mode": self.uhf_mode,
                 "Damping Factor": self.damp,
                 "Force Convergence": self.force_convergence,
                 "x tolerance": self.x_atol,
@@ -390,6 +401,7 @@ class ConfigSCF:
             f"  SCP Mode: {self.scp_mode} (Convergence target)",
             f"  Maximum Iterations: {self.maxiter}",
             f"  Mixer: {self.mixer}",
+            f"  Unrestricted Mode: {self.uhf_mode}",
             f"  Damping Factor: {self.damp}",
             f"  Force Convergence: {self.force_convergence}",
             f"  Device: {self.device}",

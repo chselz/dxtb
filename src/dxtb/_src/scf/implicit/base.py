@@ -60,6 +60,10 @@ class BaseXSCF(BaseSCF, xt.EditableModule):
 
         smat = self._data.ints.overlap
 
+        # same overlap for alpha and beta channel
+        if self.nspin == 2:
+            smat = smat.unsqueeze(-3).expand(*smat.shape[:-2], 2, -1, -1)
+
         zeros = torch.eq(smat, 0)
         mask = torch.all(zeros, dim=-1) & torch.all(zeros, dim=-2)
 

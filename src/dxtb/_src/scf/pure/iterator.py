@@ -28,6 +28,7 @@ from dxtb.config import ConfigSCF
 
 from ..mixer import Simple
 from ..result import SCFResult
+from ..utils import resolve_nspin
 from .conversions import (
     charges_to_potential,
     converged_to_charges,
@@ -108,6 +109,7 @@ def scf_wrapper(
     cache: InteractionListCache,
     integrals: IntegralMatrices,
     config: ConfigSCF,
+    nspin: int = 1,
     **kwargs: Any,
 ) -> SCFResult:
     # calculate SCF equilibrium using semi-pure functions
@@ -115,6 +117,7 @@ def scf_wrapper(
     # distinct objects containing data and configuration
     # forbidden = ["bck_options", "fwd_options", "scf_options"]
     # data_kwargs = {k: v for k, v in kwargs.items() if k not in forbidden}
+    nspin = resolve_nspin(interactions, nspin)
     data = _Data(
         occupation=occupation,
         n0=n0,
@@ -122,6 +125,7 @@ def scf_wrapper(
         ihelp=ihelp,
         cache=cache,
         integrals=integrals,
+        nspin=nspin,
         # **data_kwargs,
     )
 
@@ -190,28 +194,41 @@ def run_scf(
     """
     # initialize zero charges (equivalent to SAD guess)
     if charges is None:
-        charges = torch.zeros_like(data.occupation)
+        charges = torch.zeros_like(data.n0)
 
     # initialize Charge container depending on given integrals
     if isinstance(charges, Tensor):
-        charges = Charges(mono=charges, batch_mode=cfg.batch_mode)
-        data.charges["mono"] = charges.mono_shape
+        if data.nspin == 2:
+            charges = torch.stack((charges, torch.zeros_like(charges)), dim=-2)
+        charges = Charges(
+            mono=charges, batch_mode=cfg.batch_mode, nspin=data.nspin
+        )
 
-        if data.ints.dipole is not None:
-            shp = (*data.numbers.shape, defaults.DP_SHAPE)
-            zeros = torch.zeros(
-                shp, device=charges.mono.device, dtype=charges.mono.dtype
-            )
-            charges.dipole = zeros
-            data.charges["dipole"] = charges.dipole_shape
+    # restricted guess: start without magnetization
+    elif charges.nspin != data.nspin:
+        charges = charges.to_spin_channels(0)
 
-        if data.ints.quadrupole is not None:
-            shp = (*data.numbers.shape, defaults.QP_SHAPE)
-            zeros = torch.zeros(
-                shp, device=charges.mono.device, dtype=charges.mono.dtype
-            )
-            charges.quad = zeros
-            data.charges["quad"] = charges.quad_shape
+    spin_shape = (data.nspin,) if data.nspin == 2 else ()
+    atom_shape = (
+        *data.numbers.shape[:-1],
+        *spin_shape,
+        data.numbers.shape[-1],
+    )
+    if data.ints.dipole is not None and charges.dipole is None:
+        charges.dipole = torch.zeros(
+            (*atom_shape, defaults.DP_SHAPE),
+            device=charges.mono.device,
+            dtype=charges.mono.dtype,
+        )
+
+    if data.ints.quadrupole is not None and charges.quad is None:
+        charges.quad = torch.zeros(
+            (*atom_shape, defaults.QP_SHAPE),
+            device=charges.mono.device,
+            dtype=charges.mono.dtype,
+        )
+
+    data.charges = charges.layout
 
     if cfg.scp_mode == labels.SCP_MODE_CHARGE:
         guess = charges.as_tensor()
@@ -258,6 +275,7 @@ def run_scf(
         "energy": energy,
         "fenergy": fenergy,
         "hamiltonian": hamiltonian,
+        "nspin": data.nspin,
         "occupation": occupation,
         "potential": charges_to_potential(charges, interactions, data),
         "iterations": data.iter,
